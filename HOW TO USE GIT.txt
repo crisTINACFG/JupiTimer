@@ -1,5 +1,5 @@
 git add .
-git commit -m "Fixed bug in payment processing module"
+git commit -m "Your commit message"
 git push origin main
 
 IF FORGET TO ADD A COMMIT:
@@ -8,4 +8,10 @@ git commit --amend -m "New commit message"
 TO LOOK AT COMMITS:
 git log
 git log --pretty=oneline
+
+WHEN SWITCHING TO LAPTOP ETCETC:
+to clone the github files to pc: git clone [https://github.com/crisTINACFG/JupiTimer]
+to update only new changes use : git pull origin master
+
+
 
