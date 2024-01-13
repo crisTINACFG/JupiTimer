@@ -4,3 +4,8 @@ git push origin main
 
 IF FORGET TO ADD A COMMIT:
 git commit --amend -m "New commit message"
+
+TO LOOK AT COMMITS:
+git log
+git log --pretty=oneline
+
