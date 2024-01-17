@@ -1,6 +1,6 @@
 git add .
 git commit -m "Your commit message"
-git push origin main
+git push origin master
 
 IF FORGET TO ADD A COMMIT:
 git commit --amend -m "New commit message"
