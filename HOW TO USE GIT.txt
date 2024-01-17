@@ -10,7 +10,7 @@ git log
 git log --pretty=oneline
 
 WHEN SWITCHING TO LAPTOP ETCETC:
-to clone the github files to pc: git clone [https://github.com/crisTINACFG/JupiTimer]
+to clone the github files to pc: git clone https://github.com/crisTINACFG/JupiTimer
 to update only new changes use : git pull origin master
 
 
