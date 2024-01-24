@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Platform, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, TextInput, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 
 const Stopwatch = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [time, setTime] = useState(0);
-    const [mode, setMode] = useState('stopwatch'); // 'stopwatch', 'timer', 'pomodoro'
+    const [mode, setMode] = useState('stopwatch');
     const [startTime, setStartTime] = useState(null);
-    const [stopTime, setStopTime] = useState(null);
-    const [timerDuration, setTimerDuration] = useState(25 * 60); // For the timer, 25 minutes as an example
-    const [pomodoroDuration, setPomodoroDuration] = useState(25 * 60); // For Pomodoro, 25 minutes work session as an example
+    const [timerDuration, setTimerDuration] = useState(25 * 60);
+    const [pomodoroDuration, setPomodoroDuration] = useState(25 * 60);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [inputDuration, setInputDuration] = useState('');
+    const [isInputFocused, setIsInputFocused] = useState(false);
 
     useEffect(() => {
         let interval;
         if (isRunning) {
             interval = setInterval(() => {
-                setTime((prevTime) => {
+                setTime(prevTime => {
                     if (mode === 'stopwatch') {
                         return prevTime + 1;
                     } else if (mode === 'timer') {
@@ -38,7 +40,7 @@ const Stopwatch = () => {
         return () => clearInterval(interval);
     }, [isRunning, mode, timerDuration, pomodoroDuration]);
 
-    const handleModeChange = (newMode) => {
+    const handleModeChange = newMode => {
         setMode(newMode);
         if (newMode === 'stopwatch') {
             setTime(0);
@@ -47,76 +49,111 @@ const Stopwatch = () => {
 
     const handleStartStop = () => {
         if (isRunning) {
-            // Stop the stopwatch
             const now = new Date();
-            setStopTime(now);
-            const elapsedTime = (now - startTime) / 1000; // Elapsed time in seconds
+            const elapsedTime = (now - startTime) / 1000;
             Alert.alert('Time Elapsed', `Elapsed time: ${formatTime(elapsedTime)}`);
         } else {
-            // Start the stopwatch
             const now = new Date();
             setStartTime(now);
-            setStopTime(null);
         }
         setIsRunning(!isRunning);
     };
 
-    const formatTime = (time) => {
+    const formatTime = time => {
         const hours = Math.floor(time / 3600);
         const minutes = Math.floor((time % 3600) / 60);
         const seconds = time % 60;
-
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
+    const handleTimeSet = () => {
+        const newDuration = parseInt(inputDuration) * 60;
+        if (!isNaN(newDuration) && newDuration > 0) {
+            if (mode === 'timer') {
+                setTimerDuration(newDuration);
+                setTime(newDuration);
+            } else if (mode === 'pomodoro') {
+                setPomodoroDuration(newDuration);
+                setTime(newDuration);
+            }
+        }
+        setModalVisible(false);
+        setInputDuration('');
+    };
+
     return (
-        <View style={styles.container}>
-            {/* Segmented Control */}
-            <View style={styles.segmentedControl}>
-                <TouchableOpacity
-                    style={[styles.button, mode === 'stopwatch' && styles.buttonActive]}
-                    onPress={() => handleModeChange('stopwatch')}
-                >
-                    <Text style={styles.buttonText}>S</Text>
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            enabled
+        >
+            <View style={styles.container}>
+                <View style={styles.segmentedControl}>
+                    <TouchableOpacity
+                        style={[styles.button, mode === 'stopwatch' && styles.buttonActive]}
+                        onPress={() => handleModeChange('stopwatch')}
+                    >
+                        <Text style={styles.buttonText}>S</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.button, mode === 'timer' && styles.buttonActive]}
+                        onPress={() => handleModeChange('timer')}
+                    >
+                        <Text style={styles.buttonText}>T</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.button, mode === 'pomodoro' && styles.buttonActive]}
+                        onPress={() => handleModeChange('pomodoro')}
+                    >
+                        <Text style={styles.buttonText}>P</Text>
+                    </TouchableOpacity>
+                </View>
+    
+                <TouchableOpacity style={styles.timerContainer} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.timer}>{formatTime(time)}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.button, mode === 'timer' && styles.buttonActive]}
-                    onPress={() => handleModeChange('timer')}
-                >
-                    <Text style={styles.buttonText}>T</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.button, mode === 'pomodoro' && styles.buttonActive]}
-                    onPress={() => handleModeChange('pomodoro')}
-                >
-                    <Text style={styles.buttonText}>P</Text>
+    
+                <TouchableOpacity style={styles.startButton} onPress={handleStartStop}>
+                    <Text style={styles.startButtonText}>{isRunning ? 'Stop' : 'Start'}</Text>
                 </TouchableOpacity>
             </View>
-
-            {/* Timer Display */}
-            <View style={styles.timerContainer}>
-                <Text style={styles.timer}>
-                    {formatTime(time)}
-                </Text>
-            </View>
-
-            {/* Start/Stop Button */}
-            <TouchableOpacity
-                style={styles.startButton}
-                onPress={handleStartStop}
+    
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(!modalVisible)}
             >
-                <Text style={styles.startButtonText}>{isRunning ? 'Stop' : 'Start'}</Text>
-            </TouchableOpacity>
-        </View>
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <TouchableOpacity style={styles.exitButton} onPress={() => setModalVisible(false)}>
+                            <Text style={styles.exitButtonText}>X</Text>
+                        </TouchableOpacity>
+                        <TextInput
+                            style={[styles.input, isInputFocused ? styles.inputFocused : null]}
+                            onChangeText={setInputDuration}
+                            value={inputDuration}
+                            keyboardType="numeric"
+                            placeholder="Enter duration in minutes"
+                            onFocus={() => setIsInputFocused(true)}
+                            onBlur={() => setIsInputFocused(false)}
+                        />
+                        <TouchableOpacity style={styles.button} onPress={handleTimeSet}>
+                            <Text style={styles.buttonText}>Set Time</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
         justifyContent: 'space-around',
         alignItems: 'center',
-        paddingTop: Platform.OS === 'android' ? 25 : 0,
+        paddingTop: 25,
         backgroundColor: '#fff',
     },
     segmentedControl: {
@@ -158,6 +195,47 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 18,
         textAlign: 'center',
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: 'white',
+        padding: 20,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    input: {
+        height: 40,
+        margin: 12,
+        borderWidth: 1,
+        borderColor: 'gray',
+        padding: 10,
+        width: 200,
+        textAlign: 'center',
+    },
+    inputFocused: {
+        borderColor: 'black',
+        borderWidth: 2,
+    },
+    exitButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+    },
+    exitButtonText: {
+        color: '#000',
+        fontWeight: 'bold',
     },
 });
 
