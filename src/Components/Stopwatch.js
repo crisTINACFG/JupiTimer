@@ -109,10 +109,21 @@ const Stopwatch = () => {
                     </TouchableOpacity>
                 </View>
     
-                <TouchableOpacity style={styles.timerContainer} onPress={() => setModalVisible(true)}>
-                    <Text style={styles.timer}>{formatTime(time)}</Text>
-                </TouchableOpacity>
-    
+                {
+                    mode === 'stopwatch' ? (
+                        <View style={styles.timerContainer}>
+                            <Text style={styles.timer}>{formatTime(time)}</Text>
+                        </View>
+                    ) : (
+                        <TouchableOpacity 
+                            style={styles.timerContainer} 
+                            onPress={() => setModalVisible(true)}
+                        >
+                            <Text style={styles.timer}>{formatTime(time)}</Text>
+                        </TouchableOpacity>
+                    )
+                }
+
                 <TouchableOpacity style={styles.startButton} onPress={handleStartStop}>
                     <Text style={styles.startButtonText}>{isRunning ? 'Stop' : 'Start'}</Text>
                 </TouchableOpacity>
