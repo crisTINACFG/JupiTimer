@@ -12,19 +12,28 @@ const Stopwatch = () => {
     const [inputDuration, setInputDuration] = useState('');
     const [isInputFocused, setIsInputFocused] = useState(false);
 
+    const showElapsedTime = () => {
+        const now = new Date();
+        const elapsedTime = Math.floor((now - startTime) / 1000);
+        window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
+    };
+    
     useEffect(() => {
         let interval;
         if (isRunning) {
             interval = setInterval(() => {
                 setTime(prevTime => {
+                    if (prevTime <= 1 && (mode === 'timer' || mode === 'pomodoro')) {
+                        clearInterval(interval);
+                        setIsRunning(false);
+                        showElapsedTime();
+                        return 0; // Stop the timer at zero
+                    }
                     if (mode === 'stopwatch') {
                         return prevTime + 1;
-                    } else if (mode === 'timer') {
-                        return prevTime > 0 ? prevTime - 1 : 0;
-                    } else if (mode === 'pomodoro') {
+                    } else {
                         return prevTime > 0 ? prevTime - 1 : 0;
                     }
-                    return prevTime;
                 });
             }, 1000);
         } else {
@@ -38,20 +47,23 @@ const Stopwatch = () => {
             }
         }
         return () => clearInterval(interval);
-    }, [isRunning, mode, timerDuration, pomodoroDuration]);
+    }, [isRunning, mode, timerDuration, pomodoroDuration, showElapsedTime, startTime]);
+    
 
     const handleModeChange = newMode => {
-        setMode(newMode);
-        if (newMode === 'stopwatch') {
-            setTime(0);
+        if (!isRunning) {
+            setMode(newMode);
+            if (newMode === 'stopwatch') {
+                setTime(0);
+            }
         }
     };
 
     const handleStartStop = () => {
         if (isRunning) {
             const now = new Date();
-            const elapsedTime = (now - startTime) / 1000;
-            Alert.alert('Time Elapsed', `Elapsed time: ${formatTime(elapsedTime)}`);
+            const elapsedTime = Math.floor((now - startTime) / 1000);
+            window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
         } else {
             const now = new Date();
             setStartTime(now);
@@ -62,9 +74,9 @@ const Stopwatch = () => {
     const formatTime = time => {
         const hours = Math.floor(time / 3600);
         const minutes = Math.floor((time % 3600) / 60);
-        const seconds = time % 60;
+        const seconds = Math.floor(time % 60);
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    };
+    };    
 
     const handleTimeSet = () => {
         const newDuration = parseInt(inputDuration) * 60;
@@ -82,12 +94,13 @@ const Stopwatch = () => {
     };
 
     return (
-        <KeyboardAvoidingView
+        <View
             style={{ flex: 1 }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             enabled
         >
-            <View style={styles.container}>
+            {/*Segmented control*/}
+            <View style={styles.container} >     
                 <View style={styles.segmentedControl}>
                     <TouchableOpacity
                         style={[styles.button, mode === 'stopwatch' && styles.buttonActive]}
@@ -109,7 +122,7 @@ const Stopwatch = () => {
                     </TouchableOpacity>
                 </View>
     
-                {
+                { //timer display
                     mode === 'stopwatch' ? (
                         <View style={styles.timerContainer}>
                             <Text style={styles.timer}>{formatTime(time)}</Text>
@@ -117,13 +130,13 @@ const Stopwatch = () => {
                     ) : (
                         <TouchableOpacity 
                             style={styles.timerContainer} 
-                            onPress={() => setModalVisible(true)}
+                            onPress={() => !isRunning && setModalVisible(true)}
                         >
                             <Text style={styles.timer}>{formatTime(time)}</Text>
                         </TouchableOpacity>
                     )
                 }
-
+                {/*Start/stop button*/}
                 <TouchableOpacity style={styles.startButton} onPress={handleStartStop}>
                     <Text style={styles.startButtonText}>{isRunning ? 'Stop' : 'Start'}</Text>
                 </TouchableOpacity>
@@ -155,25 +168,23 @@ const Stopwatch = () => {
                     </View>
                 </View>
             </Modal>
-        </KeyboardAvoidingView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
-        justifyContent: 'space-around',
         alignItems: 'center',
-        paddingTop: 25,
         backgroundColor: '#fff',
     },
     segmentedControl: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 50,
+        marginTop:20,
     },
-    button: {
-        padding: 10,
+    button: {  //segmented control buttons
+        padding: 13,
         marginHorizontal: 10,
         backgroundColor: '#DDD',
         borderRadius: 5,
@@ -187,7 +198,7 @@ const styles = StyleSheet.create({
     },
     timerContainer: {
         alignItems: 'center',
-        marginVertical: 30,
+        marginTop: 500,
     },
     timer: {
         fontSize: 48,
@@ -201,6 +212,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         borderWidth: 1,
         borderColor: 'white',
+        marginTop: 30,
     },
     startButtonText: {
         color: 'white',
@@ -211,20 +223,26 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        position: 'absolute', 
+        top: 0, 
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
     modalView: {
         margin: 20,
         backgroundColor: 'white',
-        padding: 20,
+        padding: 25,
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: {
-            width: 0,
+            width: 1,
             height: 2,
         },
-        shadowOpacity: 0.25,
+        shadowOpacity: 1,
         shadowRadius: 4,
-        elevation: 5,
+        elevation: 10,
+        position: 'absolute', 
     },
     input: {
         height: 40,
@@ -248,6 +266,10 @@ const styles = StyleSheet.create({
         color: '#000',
         fontWeight: 'bold',
     },
+    timerWrapper: {
+        paddingTop: 0, 
+    },
+    
 });
 
 export default Stopwatch;
