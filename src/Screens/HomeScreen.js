@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Stopwatch from "../Components/Stopwatch";
+import Stopwatch from "../components/Stopwatch";
 
 export default function HomeScreen() {
     return (
