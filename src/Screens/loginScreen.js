@@ -1,16 +1,28 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button } from 'react-native';
-import { supabase } from '../api/supabaseClient'; 
+import { supabase } from '../api/supabaseClient';
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleLogin = async () => {
-        const { user, error } = await supabase.auth.signIn({ email, password });
-        if (error) alert(error.message);
-        if (user) navigation.replace('Home');
-    };
+        try {
+            console.log('Attempting to log in with:', email, password);
+            const { user, error } = await supabase.auth.signIn({ email, password });
+
+            if (error) {
+                console.error('Login error:', error);
+                throw error;
+            }
+
+            console.log('Login successful, user:', user);
+            if (user) navigation.replace('Home');
+        } catch (error) {
+            console.error('Login exception:', error);
+            alert(error.message);
+        }
+    }; 
 
     return (
         <View>
@@ -21,3 +33,6 @@ export default function LoginScreen({ navigation }) {
         </View>
     );
 }
+
+console.log('Supabase client:', supabase);
+console.log('Supabase auth:', supabase.auth);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button } from 'react-native';
-import { supabase } from '../api/supabaseClient';
+import { supabase } from '../api/supabaseClient.js'; 
 
 export default function SignUpScreen({ navigation }) {
     const [email, setEmail] = useState('');
@@ -9,20 +9,26 @@ export default function SignUpScreen({ navigation }) {
 
     const handleSignUp = async () => {
         const { user, error } = await supabase.auth.signUp({ email, password });
-        if (error) alert(error.message);
+        if (error) {
+            console.error('Sign up error:', error);
+            alert(error.message);
+            return;
+        }
         if (user) {
             // After signup, update the user_id in the database
-            const { error: dbError } = await supabase
+            const { data, error: dbError } = await supabase
                 .from('Users')
                 .upsert([{ email, user_id }], { returning: 'minimal' });
-
+    
             if (dbError) {
+                console.error('Database error:', dbError);
                 alert('Database error saving new user.');
             } else {
                 navigation.replace('Home');
             }
         }
     };
+    
 
     return (
         <View>
