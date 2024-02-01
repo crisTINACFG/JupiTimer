@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import HomeScreen from './src/screens/homeScreen.js';
-import LoginScreen from './src/screens/loginScreen.js';
-import SignUpScreen from './src/screens/signupScreen.js';
+import HomeScreen from './src/Screens/HomeScreen.js';
+import LoginScreen from './src/Screens/loginScreen.js';
+import SignUpScreen from './src/Screens/signupScreen.js';
 import { supabase } from './src/api/supabaseClient'; 
 const Stack = createStackNavigator();
 
