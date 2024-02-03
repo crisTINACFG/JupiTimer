@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     segmentedControl: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop:20,
+        marginTop:60,
     },
     button: {  //segmented control buttons
         padding: 13,
