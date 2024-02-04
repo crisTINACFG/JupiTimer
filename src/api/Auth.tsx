@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { supabase } from './supabaseClient';
 import { Button, Input } from 'react-native-elements';
@@ -6,43 +6,66 @@ import { Button, Input } from 'react-native-elements';
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState(''); // Updated to camelCase
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [isDisplayNameScreen, setIsDisplayNameScreen] = useState(false); // Updated to camelCase
+  const [isDisplayNameScreen, setIsDisplayNameScreen] = useState(false);
+  const [userConfirmed, setUserConfirmed] = useState(false);
 
-  async function signInWithEmail() {
-    setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+        setUserConfirmed(true);
+        checkdisplayName(session.user);
+      }
     });
+  
+    return () => {
+      authListener.unsubscribe(); // This should match the method provided by Supabase client
+    };
+  }, [isSignUp]);
+  
+
+  async function handleAuthAction() {
+    setLoading(true);
+    const action = isSignUp ? supabase.auth.signUp : supabase.auth.signInWithPassword;
+    const { data, error } = await action({ email, password });
 
     if (error) {
       Alert.alert(error.message);
-    } else if (data && data.user) {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('displayName') // Updated to match your table column name
-        .eq('id', data.user.id);
+    } else if (data?.user && isSignUp && !userConfirmed) {
+      Alert.alert('Please check your email to confirm your account.');
 
-      if (profileError) {
-        Alert.alert(profileError.message);
-      } else if (!profileData || profileData.length === 0 || !profileData[0].displayName) {
-        setIsDisplayNameScreen(true);
-      }
-    }
+      if (data?.user) {
+        await checkDisplayName(data.user);
+
     setLoading(false);
   }
 
-  async function updateDisplayName() { // Updated to camelCase
+  async function checkDisplayName(user) {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('displayName')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      Alert.alert(error.message);
+    } else if (!profile) {
+      setIsDisplayNameScreen(true);
+    } else {
+      setIsDisplayNameScreen(false);
+    }
+  }}
+
+  async function updateDisplayName() {
     setLoading(true);
     const user = supabase.auth.user();
 
     if (user) {
       const { error } = await supabase.from('profiles').upsert({
         id: user.id,
-        displayName: displayName, // Updated to match your table column name
+        displayName,
       });
 
       if (error) {
@@ -57,27 +80,12 @@ export default function Auth() {
     setLoading(false);
   }
 
-  async function signUpWithEmail() {
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    });
-
-    if (error) {
-      Alert.alert(error.message);
-    } else {
-      Alert.alert('Please check your inbox for email verification!');
-      setIsDisplayNameScreen(true);
-    }
-    setLoading(false);
-  }
-
   function toggleAuthState() {
     setIsSignUp(!isSignUp);
     setEmail('');
     setPassword('');
-    setDisplayName(''); // Clear display name when toggling auth state
+    setDisplayName('');
+    setUserConfirmed(false);
   }
 
   if (isDisplayNameScreen) {
@@ -85,50 +93,45 @@ export default function Auth() {
       <View style={styles.container}>
         <Input
           label="Display Name"
-          onChangeText={setDisplayName} // Updated to camelCase
-          value={displayName} // Updated to camelCase
+          onChangeText={setDisplayName}
+          value={displayName}
           placeholder="Enter your display name"
-          autoCapitalize='none'
+          autoCapitalize="none"
         />
-        <Button title="Set Display Name" disabled={loading} onPress={updateDisplayName} /> 
+        <Button title="Set Display Name" disabled={loading} onPress={updateDisplayName} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input
-          label="Email"
-          leftIcon={{ type: 'font-awesome', name: 'envelope' }}
-          onChangeText={(text) => setEmail(text)}
-          value={email}
-          placeholder="email@address.com"
-          autoCapitalize={'none'}
-        />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Input
-          label="Password"
-          leftIcon={{ type: 'font-awesome', name: 'lock' }}
-          onChangeText={(text) => setPassword(text)}
-          value={password}
-          secureTextEntry={true}
-          placeholder="Password"
-          autoCapitalize={'none'}
-        />
-      </View>
-      {isSignUp ? (
-        <View style={[styles.verticallySpaced, styles.mt20]}>
-          <Button title="Sign up" disabled={loading} onPress={() => signUpWithEmail()} />
-          <Button title="Already have an account?" type="clear" onPress={toggleAuthState} />
-        </View>
-      ) : (
-        <View style={[styles.verticallySpaced, styles.mt20]}>
-          <Button title="Sign in" disabled={loading} onPress={() => signInWithEmail()} />
-          <Button title="Create account" type="clear" onPress={toggleAuthState} />
-        </View>
-      )}
+      <Input
+        label="Email"
+        leftIcon={{ type: 'font-awesome', name: 'envelope' }}
+        onChangeText={setEmail}
+        value={email}
+        placeholder="email@address.com"
+        autoCapitalize="none"
+      />
+      <Input
+        label="Password"
+        leftIcon={{ type: 'font-awesome', name: 'lock' }}
+        onChangeText={setPassword}
+        value={password}
+        secureTextEntry={true}
+        placeholder="Password"
+        autoCapitalize="none"
+      />
+      <Button
+        title={isSignUp ? "Sign Up" : "Sign In"}
+        disabled={loading}
+        onPress={handleAuthAction}
+      />
+      <Button
+        title={isSignUp ? "Already have an account?" : "Create account"}
+        type="clear"
+        onPress={toggleAuthState}
+      />
     </View>
   );
 }
@@ -146,4 +149,4 @@ const styles = StyleSheet.create({
   mt20: {
     marginTop: 20,
   },
-})
+});}
