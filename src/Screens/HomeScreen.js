@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, Pressable, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import Stopwatch from '../Components/Stopwatch';
-import { logout } from '../api/supabaseClient';
 import SettingsScreen from './settingsScreen';
 
 export default function HomeScreen() {

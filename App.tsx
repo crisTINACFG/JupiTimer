@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto';
 import React, { useState, useEffect } from 'react';
 import { supabase } from './src/api/supabaseClient';
 import Auth from './src/api/Auth';
-import HomeScreen from './src/Screens/homeScreen';
+import HomeScreen from './src/Screens/HomeScreen';
 import { View } from 'react-native';
 import { Session } from '@supabase/supabase-js';
 import { logout } from './src/api/supabaseClient';
