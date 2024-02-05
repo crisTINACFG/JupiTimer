@@ -1,15 +1,26 @@
-import React from 'react';
-import { View, StyleSheet, Text, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text, Pressable, TouchableOpacity } from 'react-native';
 import Stopwatch from '../Components/Stopwatch';
 import { logout } from '../api/supabaseClient';
+import SettingsScreen from './settingsScreen';
 
 export default function HomeScreen() {
+    const [settingsToggle, setSettingsToggle] = useState(false);
+
+    const handleToggleSettings = () => {
+        setSettingsToggle(!settingsToggle);
+      };
+
     return (
         <View style={styles.container}>
             <Stopwatch />
-            <Pressable onPress={logout} style={styles.logoutButton}>
-                 <Text>Logout</Text>
-            </Pressable>
+            
+            <TouchableOpacity onPress={handleToggleSettings} style={styles.settingsButton}>
+                <Text>Settings</Text>
+            </TouchableOpacity>
+
+            {settingsToggle && (<SettingsScreen onToggleSettings = {handleToggleSettings}/>)}
+            {/*If settingsToggle is true then render settingsScreen*/}
         </View>
     );
 }
@@ -19,13 +30,14 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff', // Ensure the background color matches across screens
+        backgroundColor: '#fff',
     },
-    logoutButton: {
-        marginTop: 20,
-        padding: 10,
-        backgroundColor: 'red', // Choose a suitable color
-        borderRadius: 5,
+      settingsButton: {
+        position: 'absolute', 
+        top: 4,            
+        right: 2,          
+        padding: 7, 
+        backgroundColor:'pink',  
+        borderRadius: 5,      
       },
-      
 });

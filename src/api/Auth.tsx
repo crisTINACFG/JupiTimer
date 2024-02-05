@@ -1,136 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
-import { supabase } from './supabaseClient';
-import { Button, Input } from 'react-native-elements';
+import React, { useState } from 'react'
+import { Alert, StyleSheet, View, AppState } from 'react-native'
+import { supabase } from './supabaseClient'
+import { Button, Input } from 'react-native-elements'
+
+// Tells Supabase Auth to continuously refresh the session automatically if
+// the app is in the foreground. When this is added, you will continue to receive
+// `onAuthStateChange` events with the `TOKEN_REFRESHED` or `SIGNED_OUT` event
+// if the user's session is terminated. This should only be registered once.
+AppState.addEventListener('change', (state) => {
+  if (state === 'active') {
+    supabase.auth.startAutoRefresh()
+  } else {
+    supabase.auth.stopAutoRefresh()
+  }
+})
 
 export default function Auth() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [isDisplayNameScreen, setIsDisplayNameScreen] = useState(false);
-  const [userConfirmed, setUserConfirmed] = useState(false);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-        setUserConfirmed(true);
-        checkDisplayName(session.user);
-      }
-    });
+  async function signInWithEmail() {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    })
 
-    return () => {
-      authListener.unsubscribe();
-    };
-  }, [isSignUp]);
-
-  async function handleAuthAction() {
-    setLoading(true);
-    const action = isSignUp ? supabase.auth.signUp : supabase.auth.signIn;
-    const { data, error } = await action({ email, password });
-
-    if (error) {
-      Alert.alert(error.message);
-    } else if (data?.user && isSignUp && !userConfirmed) {
-      Alert.alert('Please check your email to confirm your account.');
-      await checkDisplayName(data.user);
-    }
-    setLoading(false);
+    if (error) Alert.alert(error.message)
+    setLoading(false)
   }
 
-  async function checkDisplayName(user) {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('displayName')
-      .eq('id', user.id)
-      .maybeSingle();
+  async function signUpWithEmail() {
+    setLoading(true)
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    })
 
-    if (error) {
-      Alert.alert(error.message);
-    } else if (!profile) {
-      setIsDisplayNameScreen(true);
-    } else {
-      setIsDisplayNameScreen(false);
-    }
-  }
-
-  async function updateDisplayName() {
-    setLoading(true);
-    const user = supabase.auth.user();
-
-    if (user) {
-      const { error } = await supabase.from('profiles').upsert({
-        id: user.id,
-        displayName,
-      });
-
-      if (error) {
-        Alert.alert(error.message);
-      } else {
-        Alert.alert('Display name set successfully!');
-        setIsDisplayNameScreen(false);
-      }
-    } else {
-      Alert.alert('No user is signed in.');
-    }
-    setLoading(false);
-  }
-
-  function toggleAuthState() {
-    setIsSignUp(!isSignUp);
-    setEmail('');
-    setPassword('');
-    setDisplayName('');
-    setUserConfirmed(false);
-  }
-
-  if (isDisplayNameScreen) {
-    return (
-      <View style={styles.container}>
-        <Input
-          label="Display Name"
-          onChangeText={setDisplayName}
-          value={displayName}
-          placeholder="Enter your display name"
-          autoCapitalize="none"
-        />
-        <Button title="Set Display Name" disabled={loading} onPress={updateDisplayName} />
-      </View>
-    );
+    if (error) Alert.alert(error.message)
+    if (!session) Alert.alert('Please check your inbox for email verification!')
+    setLoading(false)
   }
 
   return (
     <View style={styles.container}>
-      <Input
-        label="Email"
-        leftIcon={{ type: 'font-awesome', name: 'envelope' }}
-        onChangeText={setEmail}
-        value={email}
-        placeholder="email@address.com"
-        autoCapitalize="none"
-      />
-      <Input
-        label="Password"
-        leftIcon={{ type: 'font-awesome', name: 'lock' }}
-        onChangeText={setPassword}
-        value={password}
-        secureTextEntry={true}
-        placeholder="Password"
-        autoCapitalize="none"
-      />
-      <Button
-        title={isSignUp ? "Sign Up" : "Sign In"}
-        disabled={loading}
-        onPress={handleAuthAction}
-      />
-      <Button
-        title={isSignUp ? "Already have an account?" : "Create account"}
-        type="clear"
-        onPress={toggleAuthState}
-      />
+      <View style={[styles.verticallySpaced, styles.mt20]}>
+        <Input
+          label="Email"
+          leftIcon={{ type: 'font-awesome', name: 'envelope' }}
+          onChangeText={(text) => setEmail(text)}
+          value={email}
+          placeholder="email@address.com"
+          autoCapitalize={'none'}
+        />
+      </View>
+      <View style={styles.verticallySpaced}>
+        <Input
+          label="Password"
+          leftIcon={{ type: 'font-awesome', name: 'lock' }}
+          onChangeText={(text) => setPassword(text)}
+          value={password}
+          secureTextEntry={true}
+          placeholder="Password"
+          autoCapitalize={'none'}
+        />
+      </View>
+      <View style={[styles.verticallySpaced, styles.mt20]}>
+        <Button title="Sign in" disabled={loading} onPress={() => signInWithEmail()} />
+      </View>
+      <View style={styles.verticallySpaced}>
+        <Button title="Sign up" disabled={loading} onPress={() => signUpWithEmail()} />
+      </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -146,4 +92,4 @@ const styles = StyleSheet.create({
   mt20: {
     marginTop: 20,
   },
-});
+})
