@@ -16,29 +16,26 @@ export default function Auth() {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
         setUserConfirmed(true);
-        checkdisplayName(session.user);
+        checkDisplayName(session.user);
       }
     });
-  
+
     return () => {
-      authListener.unsubscribe(); // This should match the method provided by Supabase client
+      authListener.unsubscribe();
     };
   }, [isSignUp]);
-  
 
   async function handleAuthAction() {
     setLoading(true);
-    const action = isSignUp ? supabase.auth.signUp : supabase.auth.signInWithPassword;
+    const action = isSignUp ? supabase.auth.signUp : supabase.auth.signIn;
     const { data, error } = await action({ email, password });
 
     if (error) {
       Alert.alert(error.message);
     } else if (data?.user && isSignUp && !userConfirmed) {
       Alert.alert('Please check your email to confirm your account.');
-
-      if (data?.user) {
-        await checkDisplayName(data.user);
-
+      await checkDisplayName(data.user);
+    }
     setLoading(false);
   }
 
@@ -56,7 +53,7 @@ export default function Auth() {
     } else {
       setIsDisplayNameScreen(false);
     }
-  }}
+  }
 
   async function updateDisplayName() {
     setLoading(true);
@@ -149,4 +146,4 @@ const styles = StyleSheet.create({
   mt20: {
     marginTop: 20,
   },
-});}
+});
