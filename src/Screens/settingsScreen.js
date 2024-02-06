@@ -35,10 +35,13 @@ const styles = StyleSheet.create({
         top: 10,
         right: 10,
         padding: 10,
+        backgroundColor: 'pink',
+        color: 'black',
     },
     logoutButton: {
         padding: 10,
         backgroundColor: 'pink',
         borderRadius: 5,
+        color: 'black',
     },
 });

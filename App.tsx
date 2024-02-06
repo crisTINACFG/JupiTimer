@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './src/api/supabaseClient';
 import Auth from './src/api/Auth';
 import HomeScreen from './src/Screens/HomeScreen';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Session } from '@supabase/supabase-js';
 import { logout } from './src/api/supabaseClient';
 
@@ -31,5 +31,20 @@ export default function App() {
   }, []);
 
   // 'session && session.user' way to determine if a user is currently authenticated
-  return session && session.user ? <HomeScreen /> : <View><Auth/></View>;
+  return session && session.user ? <HomeScreen /> : <Auth/>;
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 12,
+    backgroundColor: 'white',
+  },
+  verticallySpaced: {
+    paddingTop: 4,
+    paddingBottom: 4,
+    alignSelf: 'stretch',
+  },
+  mt20: {
+    marginTop: 20,
+  },
+})
