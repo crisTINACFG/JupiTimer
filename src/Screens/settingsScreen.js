@@ -2,13 +2,14 @@
 import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { logout } from '../api/supabaseClient';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function settingsScreen({ onToggleSettings }) {
     return (
         <View style={styles.container}>
             {/* Exit button */}
-            <TouchableOpacity onPress={onToggleSettings} style={styles.exitButton}>
-                <Text>X</Text>
+            <TouchableOpacity onPress={onToggleSettings} style={styles.settingsButton}>
+                <Icon name="cog" size={24} color="#000" /> 
             </TouchableOpacity>
 
             {/* Logout button */}
@@ -30,14 +31,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    exitButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        padding: 10,
-        backgroundColor: 'pink',
-        color: 'black',
-    },
+    settingsButton: {
+        position: 'absolute', 
+        top: 4,            
+        right: 2,          
+        padding: 7, 
+        borderRadius: 5,      
+      },
     logoutButton: {
         padding: 10,
         backgroundColor: 'pink',

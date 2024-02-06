@@ -141,7 +141,7 @@ const Stopwatch = () => {
                     <Text style={styles.startButtonText}>{isRunning ? 'Stop' : 'Start'}</Text>
                 </TouchableOpacity>
             </View>
-    
+             
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -168,6 +168,8 @@ const Stopwatch = () => {
                     </View>
                 </View>
             </Modal>
+   
+
         </View>
     );
 };
@@ -243,6 +245,8 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 10,
         position: 'absolute', 
+        borderRadius: 10,
+        
     },
     input: {
         height: 40,

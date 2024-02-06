@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import Stopwatch from '../Components/Stopwatch';
 import SettingsScreen from './settingsScreen';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function HomeScreen() {
     const [settingsToggle, setSettingsToggle] = useState(false);
@@ -15,7 +16,7 @@ export default function HomeScreen() {
             <Stopwatch />
             
             <TouchableOpacity onPress={handleToggleSettings} style={styles.settingsButton}>
-                <Text>Settings</Text>
+                <Icon name="cog" size={24} color="#000" /> 
             </TouchableOpacity>
 
             {settingsToggle && (<SettingsScreen onToggleSettings = {handleToggleSettings}/>)}
@@ -36,7 +37,6 @@ const styles = StyleSheet.create({
         top: 4,            
         right: 2,          
         padding: 7, 
-        backgroundColor:'pink',  
         borderRadius: 5,      
       },
 });
