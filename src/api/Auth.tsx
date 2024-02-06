@@ -51,7 +51,7 @@ export default function Auth() {
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Input
           label="Email"
-          leftIcon={{ type: 'font-awesome', name: 'envelope' }}
+          leftIcon={{ type: 'font-awesome', name: 'envelope' }} 
           onChangeText={(text) => setEmail(text)}
           value={email}
           placeholder="email@address.com"
