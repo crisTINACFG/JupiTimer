@@ -54,7 +54,6 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
         }
 
         const image = response.assets[0];
-        console.log('Got image', image);
 
         if (!image.uri) {
           throw new Error('No image uri!'); // Realistically, this should never happen, but just in case...
@@ -89,20 +88,19 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
 
   return (
     <View>
-      {avatarUrl ? (
-        <TouchableOpacity onPress={uploadAvatar}
-        disabled={uploading}>
-            <Image
-          source={{ uri: avatarUrl }}
-          accessibilityLabel="Avatar"
-          style={[avatarSize, styles.avatar, styles.image]}
-        />
-        </TouchableOpacity>
-      ) : (
-        <View style={[avatarSize, styles.avatar, styles.noImage]} />
-      )}
-      
-    </View>
+  <TouchableOpacity onPress={uploadAvatar} disabled={uploading}>
+    {avatarUrl ? (
+      <Image
+        source={{ uri: avatarUrl }}
+        accessibilityLabel="Avatar"
+        style={[avatarSize, styles.avatar, styles.image]}
+      />
+    ) : (
+      <View style={[avatarSize, styles.avatar, styles.noImage]} />
+    )}
+  </TouchableOpacity>
+</View>
+
   )
 }
 
@@ -121,6 +119,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: 'rgb(200, 200, 200)',
-    borderRadius: 5,
+    borderRadius: 100,
   },
 })

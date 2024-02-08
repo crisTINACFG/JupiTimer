@@ -6,9 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useState, useEffect } from 'react'
 import { supabase } from '../api/supabaseClient'
 import { Button, Input } from 'react-native-elements'
-import { Session } from '@supabase/supabase-js'
 import Avatar from '../Components/Avatar';
-import { SaveAlt } from '@mui/icons-material';
 
 export default function settingsScreen({ session ,onToggleSettings }) {
     
