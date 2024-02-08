@@ -4,7 +4,7 @@ import Stopwatch from '../Components/Stopwatch';
 import SettingsScreen from './settingsScreen';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-export default function HomeScreen() {
+export default function HomeScreen({ session }) {
     const [settingsToggle, setSettingsToggle] = useState(false);
 
     const handleToggleSettings = () => {
@@ -19,7 +19,7 @@ export default function HomeScreen() {
                 <Icon name="cog" size={24} color="#000" /> 
             </TouchableOpacity>
 
-            {settingsToggle && (<SettingsScreen onToggleSettings = {handleToggleSettings}/>)}
+            {settingsToggle && (<SettingsScreen session={session} onToggleSettings = {handleToggleSettings}/>)}
             {/*If settingsToggle is true then render settingsScreen*/}
         </View>
     );
