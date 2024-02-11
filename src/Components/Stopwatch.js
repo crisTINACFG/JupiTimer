@@ -63,7 +63,7 @@ const Stopwatch = ({ session }) => {
 
     const writeToDatabase = async (startTime, stopTime, elapsedTime, label) => {
         if (elapsedTime < 1) {
-            // show an alert andreturn to prevent the database operation.
+            // show an alert and return to prevent the database operation.
             window.alert('Time elapsed too short.');
             return;
         }
@@ -88,8 +88,6 @@ const Stopwatch = ({ session }) => {
     
         if (error) {
             console.log('Error writing to database', error.message);
-        } else {
-            console.log('Data written to database', data);
         }
     };
     

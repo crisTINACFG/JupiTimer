@@ -78,8 +78,8 @@ export default function settingsScreen({ session, onToggleSettings }) {
   async function deleteProfilePicture() {
     try {
       setLoading(true);
+      setAvatarUrl(null);
       await updateProfile({ username, avatar_url: null });
-      setAvatarUrl(null); // Update local state to reflect the deletion
     } catch (error) {
       if (error instanceof Error) {
         Alert.alert(error.message);
@@ -100,6 +100,7 @@ export default function settingsScreen({ session, onToggleSettings }) {
 
       <View style ={styles.avatar}>
         <Avatar
+          key={avatarUrl || 'default-key'}
           size={200}
           url={avatarUrl}
           onUpload={(url: string) => {
