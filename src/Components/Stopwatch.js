@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, TextInput, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput, Platform, Modal } from 'react-native';
+import { supabase } from '../api/supabaseClient';
 
-const Stopwatch = () => {
+const Stopwatch = ({ session }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [mode, setMode] = useState('stopwatch');
@@ -11,10 +12,11 @@ const Stopwatch = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [inputDuration, setInputDuration] = useState('');
     const [isInputFocused, setIsInputFocused] = useState(false);
+    const [label, setLabel] = useState('');
 
     const showElapsedTime = () => {
-        const now = new Date();
-        const elapsedTime = Math.floor((now - startTime) / 1000);
+        const stopTime = new Date();
+        const elapsedTime = Math.floor((stopTime - startTime) / 1000);
         window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
     };
     
@@ -59,13 +61,50 @@ const Stopwatch = () => {
         }
     };
 
-    const handleStartStop = () => {
-        if (isRunning) {
-            const now = new Date();
-            const elapsedTime = Math.floor((now - startTime) / 1000);
-            window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
+    const writeToDatabase = async (startTime, stopTime, elapsedTime, label) => {
+        if (elapsedTime < 1) {
+            // show an alert andreturn to prevent the database operation.
+            window.alert('Time elapsed too short.');
+            return;
+        }
+   
+        const hours = Math.floor(elapsedTime / 3600);
+        const minutes = Math.floor((elapsedTime % 3600) / 60);
+        const seconds = elapsedTime % 60;
+        const formattedElapsedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+        const { data, error } = await supabase
+            .from('studysession')
+            .insert([
+                {
+                    id: session.user.id,
+                    starttime: startTime.toISOString(),  
+                    stoptime: stopTime.toISOString(),   
+                    elapsedtime: formattedElapsedTime,  
+                    label: 'temporary',
+                    planet_type: 'Earth'  
+                }
+            ]);
+    
+        if (error) {
+            console.log('Error writing to database', error.message);
         } else {
-            const now = new Date();
+            console.log('Data written to database', data);
+        }
+    };
+    
+    
+
+    const handleStartStop = () => {
+        const now = new Date();
+        if (isRunning) {
+            const elapsedTime = Math.floor((now - startTime) / 1000);
+            writeToDatabase(startTime, now, elapsedTime, label);
+
+            if (elapsedTime>0){
+                window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
+        };
+        } else {
             setStartTime(now);
         }
         setIsRunning(!isRunning);

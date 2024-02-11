@@ -1,83 +1,102 @@
-// SettingsScreen.js
-import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Alert  } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { logout } from '../api/supabaseClient';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useState, useEffect } from 'react'
-import { supabase } from '../api/supabaseClient'
-import { Button, Input } from 'react-native-elements'
+import { supabase } from '../api/supabaseClient';
+import { Button, Input } from 'react-native-elements';
 import Avatar from '../Components/Avatar';
 
-export default function settingsScreen({ session ,onToggleSettings }) {
+export default function settingsScreen({ session, onToggleSettings }) {
+  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState('');
+  // Allow avatarUrl to be either string or null
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session) getProfile();
+  }, [session]);
+
+  async function getProfile() {
+    try {
+      setLoading(true);
+      if (!session?.user) throw new Error('No user on the session!');
+
+      const { data, error, status } = await supabase
+        .from('profiles')
+        .select(`username, avatar_url`)
+        .eq('id', session?.user.id)
+        .single();
+      if (error && status !== 406) {
+        throw error;
+      }
+
+      if (data) {
+        setUsername(data.username);
+        setAvatarUrl(data.avatar_url);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert(error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateProfile({
+    username,
+    avatar_url, 
+  }: {
+    username: string;
+    avatar_url: string | null;
+  }) {
+    try {
+      setLoading(true);
+      if (!session?.user) throw new Error('No user on the session!');
+
+      const updates = {
+        id: session?.user.id,
+        username,
+        avatar_url,
+        updated_at: new Date(),
+      };
+
+      const { error } = await supabase.from('profiles').upsert(updates);
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert(error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteProfilePicture() {
+    try {
+      setLoading(true);
+      await updateProfile({ username, avatar_url: null });
+      setAvatarUrl(null); // Update local state to reflect the deletion
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert(error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
     
-    const [loading, setLoading] = useState(true)
-    const [username, setUsername] = useState('')
-    const [avatarUrl, setAvatarUrl] = useState('')
-
-    useEffect(() => {
-      if (session) getProfile()
-    }, [session])
-
-    async function getProfile() {
-      try {
-        setLoading(true)
-        if (!session?.user) throw new Error('No user on the session!')
-
-        const { data, error, status } = await supabase
-          .from('profiles')
-          .select(`username, avatar_url`)
-          .eq('id', session?.user.id)
-          .single()
-        if (error && status !== 406) {
-          throw error
-        }
-
-        if (data) {
-          setUsername(data.username)
-          setAvatarUrl(data.avatar_url)
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          Alert.alert(error.message)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    async function updateProfile({
-      username,
-      avatar_url,
-    }: {
-      username: string
-      avatar_url: string
-    }) {
-      try {
-        setLoading(true)
-        if (!session?.user) throw new Error('No user on the session!')
-
-        const updates = {
-          id: session?.user.id,
-          username,
-          avatar_url,
-          updated_at: new Date(),
-        }
-
-        const { error } = await supabase.from('profiles').upsert(updates)
-
-        if (error) {
-          throw error
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          Alert.alert(error.message)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
     return (
     <View style={styles.container}>
+
+      <Button
+        title="Delete Profile Picture"
+        onPress={deleteProfilePicture}
+        disabled={loading}
+      />
 
       <View style ={styles.avatar}>
         <Avatar
@@ -91,21 +110,17 @@ export default function settingsScreen({ session ,onToggleSettings }) {
      </View>
       
       <View style={styles.verticallySpaced}>
-        <Input label="Username" value={username || ''} onChangeText={(text) => setUsername(text)} />
+        <Input label="Username" 
+        value={username || ''} 
+        onChangeText={(text) => setUsername(text)} 
+        onSubmitEditing={() => updateProfile({ username, avatar_url: avatarUrl })}
+        />
       </View>
 
       <View style={styles.verticallySpaced}>
         <Input label="Email" value={session?.user?.email} disabled />
       </View>
-
-      <View style={styles.verticallySpaced}>
-        <Button
-          title={loading ? 'Loading ...' : 'Update'}
-          onPress={() => updateProfile({ username, avatar_url: avatarUrl })}
-          disabled={loading}
-        />
-      </View>
-  
+ 
       {/* Exit button */}
       <TouchableOpacity onPress={onToggleSettings} style={styles.settingsButton}>
           <Icon name="cog" size={24} color="#000" /> 

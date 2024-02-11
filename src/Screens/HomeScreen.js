@@ -13,7 +13,7 @@ export default function HomeScreen({ session }) {
 
     return (
         <View style={styles.container}>
-            <Stopwatch />
+            <Stopwatch session={session}/>
             
             <TouchableOpacity onPress={handleToggleSettings} style={styles.settingsButton}>
                 <Icon name="cog" size={24} color="#000" /> 

@@ -48,7 +48,6 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
         quality: 1,
       }, async (response) => {
         if (response.didCancel || !response.assets) {
-          console.log('User cancelled image picker.');
           setUploading(false);
           return;
         }
