@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, Platform, Modal } from 'react-native';
 import { supabase } from '../api/supabaseClient';
 
-const Stopwatch = ({ session }) => {
+const Timers = ({ session }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [mode, setMode] = useState('stopwatch');
@@ -14,31 +14,62 @@ const Stopwatch = ({ session }) => {
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [label, setLabel] = useState('');
 
-    const showElapsedTime = () => {
-        const stopTime = new Date();
-        const elapsedTime = Math.floor((stopTime - startTime) / 1000);
-        window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
+    const formatTime = (timeInSeconds) => {
+        const hours = Math.floor(timeInSeconds / 3600);
+        const minutes = Math.floor((timeInSeconds % 3600) / 60);
+        const seconds = timeInSeconds % 60;
+    
+        // Pad each time component to ensure it has at least two digits
+        const paddedHours = hours.toString().padStart(2, '0');
+        const paddedMinutes = minutes.toString().padStart(2, '0');
+        const paddedSeconds = seconds.toString().padStart(2, '0');
+    
+        // Format the time as "HH:MM:SS"
+        return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
     };
     
-    useEffect(() => {
-        let interval;
+
+    const showElapsedTime = () => { //this function displays the time elapsed
+        const elapsedTime = calculateElapsedTime()
+        window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
+    };
+
+    const calculateElapsedTime = () => { //calculates the time elapsed based on the mode
+        const stopTime = new Date();
+        if (mode === 'stopwatch') {
+            return Math.floor((stopTime - startTime) / 1000);
+        }
+        if (mode === 'timer'){
+            return Math.floor((stopTime - startTime) / 1000);
+        }
+        else {
+            return Math.floor((stopTime - startTime) / 1000); //this is temporary for pomodoro!!
+        }
+    };
+    
+    useEffect(() => { //controls behaviour of the timers based on the users actions or mode. When the isRunning state is true 
+        //(timer has been started), it sets up an interval that executes a function every 1000 milliseconds (1 second).
+        // This function updates the time state to either count up (stopwatch mode) or count down ( timer and pomodoro modes).
+        
+        let interval; //this interval ensures the UI is updated every sec to reflect the current time!!!
         if (isRunning) {
             interval = setInterval(() => {
-                setTime(prevTime => {
-                    if (prevTime <= 1 && (mode === 'timer' || mode === 'pomodoro')) {
+                setTime(currentTime => {
+                    if (currentTime <= 1 && (mode === 'timer' || mode === 'pomodoro')) { //if time remaining is 1 or less then stop the timer
                         clearInterval(interval);
                         setIsRunning(false);
                         showElapsedTime();
                         return 0; // Stop the timer at zero
                     }
                     if (mode === 'stopwatch') {
-                        return prevTime + 1;
+                        return currentTime + 1;
                     } else {
-                        return prevTime > 0 ? prevTime - 1 : 0;
+                        return currentTime > 0 ? currentTime - 1 : 0; //if theres more than 0sec remaning on the timer remove -1 sec from currentTime
                     }
                 });
             }, 1000);
-        } else {
+        } else {  //if timer is not running, resets the interval and resets the time displayed to its initial value aka 0 for stopwatch
+            //and timerDuration and pomodoroDuration 
             clearInterval(interval);
             if (mode === 'timer') {
                 setTime(timerDuration);
@@ -48,8 +79,10 @@ const Stopwatch = ({ session }) => {
                 setTime(0);
             }
         }
-        return () => clearInterval(interval);
-    }, [isRunning, mode, timerDuration, pomodoroDuration, showElapsedTime, startTime]);
+        return () => clearInterval(interval); //cleanup function react calls when component unmounts or before re-running due to changes
+        //in its dependencies, this cleanup prevents the interval from continuing to run or update state in an unmounted component.
+    }, [isRunning, mode, timerDuration, pomodoroDuration, showElapsedTime, startTime]); //these are dependencies, if these change then the
+    //effect re-runs to reflect the lastest state and props!!!
     
 
     const handleModeChange = newMode => {
@@ -91,29 +124,23 @@ const Stopwatch = ({ session }) => {
         }
     };
     
-    
-
     const handleStartStop = () => {
-        const now = new Date();
         if (isRunning) {
-            const elapsedTime = Math.floor((now - startTime) / 1000);
-            writeToDatabase(startTime, now, elapsedTime, label);
-
-            if (elapsedTime>0){
-                window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
-        };
+            // Directly use showElapsedTime to calculate and display the elapsed time
+            showElapsedTime(); // This function internally handles the calculation based on the current Date
+    
+            // If you need to write to the database and require the elapsed time for that,
+            // you should call calculateElapsedTime directly as it calculates the elapsed time.
+            // Since calculateElapsedTime already captures the current time internally, there's no need to pass it.
+            const elapsedTime = calculateElapsedTime();
+            writeToDatabase(startTime, new Date(), elapsedTime, label);
         } else {
-            setStartTime(now);
+            // Start the timer by setting the startTime to the current time
+            setStartTime(new Date());
         }
+        // Toggle the running state
         setIsRunning(!isRunning);
     };
-
-    const formatTime = time => {
-        const hours = Math.floor(time / 3600);
-        const minutes = Math.floor((time % 3600) / 60);
-        const seconds = Math.floor(time % 60);
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    };    
 
     const handleTimeSet = () => {
         const newDuration = parseInt(inputDuration) * 60;
@@ -313,4 +340,4 @@ const styles = StyleSheet.create({
     
 });
 
-export default Stopwatch;
+export default Timers;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import Stopwatch from '../Components/Stopwatch';
+import Stopwatch from '../Components/Timers';
 import SettingsScreen from './settingsScreen';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
