@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TextInput, Platform, Modal } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput, Platform, Modal, Alert } from 'react-native';
 import { supabase } from '../api/supabaseClient';
 
 const Timers = ({ session }) => {
@@ -11,15 +11,15 @@ const Timers = ({ session }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [inputDuration, setInputDuration] = useState('');
     const [isInputFocused, setIsInputFocused] = useState(false);
-    const [label, setLabel] = useState('');
+    const [label, setLabel] = useState('');  
 
     const [pomodoroDuration, setPomodoroDuration] = useState(25 * 60);
     const [breakDuration, setBreakDuration] = useState(5*60);
+    const [breakTime, setBreakTime] = useState(0);
     const [isBreak, setIsBreak] = useState(false);
-
-    const handlePomodoroTimer = () => {
-
-    };
+    const [isStudy, setIsStudy] = useState(true);
+    const [continueSession, setContinueSession] = useState(null);
+    const [pomodoroElapsed, setPomodoroElapsed] = useState(0);
 
     const formatTime = (timeInSeconds, omitHours = false) => {
         const hours = Math.floor(timeInSeconds / 3600);
@@ -39,9 +39,14 @@ const Timers = ({ session }) => {
         }
     };
 
-    const showElapsedTime = () => { //this function displays the time elapsed
-        const elapsedTime = calculateElapsedTime()
-        window.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
+    const showElapsedTime = () => {  //this asks for pomodoroElapsed but is not yet calling the calculate function!!
+        if (mode === 'pomodoro') {
+            Alert.alert(`Time Elapsed: ${formatTime(pomodoroElapsed)}`);
+        }
+        else {
+            const elapsedTime = calculateElapsedTime()
+            Alert.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
+        }
     };
 
     const calculateElapsedTime = () => { //calculates the time elapsed based on the mode
@@ -52,10 +57,29 @@ const Timers = ({ session }) => {
         if (mode === 'timer'){
             return Math.floor((stopTime - startTime) / 1000);
         }
-        else {
-            return Math.floor((stopTime - startTime) / 1000); //this is temporary for pomodoro!!
-        }
     };
+
+    const calculatePomodoroElapsed = () => { //calculates the elapsed session and adds it on to the old session
+        const stopTime = new Date();
+        const elapsedSession = Math.floor((stopTime - startTime) / 1000);
+        const newTotal = pomodoroElapsed + elapsedSession
+        setPomodoroElapsed(newTotal)
+    };
+
+    const handlePomodoroStop = () => {
+        Alert.alert(
+          "Session Ended",
+          "Do you want to continue the session?",
+          [
+            {
+              text: "No",
+              onPress: () => setContinueSession(false),
+              style: "cancel"
+            },
+            { text: "Yes", onPress: () => setContinueSession(true) }
+          ]
+        );
+      };
     
     useEffect(() => { //controls behaviour of the timers based on the users actions or mode. When the isRunning state is true 
         //(timer has been started), it sets up an interval that executes a function every 1000 milliseconds (1 second).
@@ -65,7 +89,7 @@ const Timers = ({ session }) => {
         if (isRunning) {
             interval = setInterval(() => {
                 setTime(currentTime => {
-                    if (currentTime <= 1 && (mode === 'timer' || mode === 'pomodoro')) { //if time remaining is 1 or less then stop the timer
+                    if (currentTime <= 1 && mode === 'timer') { //if time remaining is 1 or less then stop the timer
                         clearInterval(interval);
                         setIsRunning(false);
                         showElapsedTime();
@@ -78,6 +102,7 @@ const Timers = ({ session }) => {
                     }
                 });
             }, 1000);
+
         } else {  //if timer is not running, resets the interval and resets the time displayed to its initial value aka 0 for stopwatch
             //and timerDuration and pomodoroDuration 
             clearInterval(interval);
@@ -91,7 +116,7 @@ const Timers = ({ session }) => {
         }
         return () => clearInterval(interval); //cleanup function react calls when component unmounts or before re-running due to changes
         //in its dependencies, this cleanup prevents the interval from continuing to run or update state in an unmounted component.
-    }, [isRunning, mode, timerDuration, pomodoroDuration, showElapsedTime, startTime]); //these are dependencies, if these change then the
+    }, [isRunning, mode, timerDuration, pomodoroDuration, breakDuration, showElapsedTime, startTime]); //these are dependencies, if these change then the
     //effect re-runs to reflect the lastest state and props!!!
     
 
@@ -158,7 +183,6 @@ const Timers = ({ session }) => {
                 setTime(newDuration);
             } else if (mode === 'pomodoro' && isBreak) { //break timer
                 setBreakDuration(newDuration);
-                setTime(newDuration);
             }
         }
         setModalVisible(false);
@@ -182,12 +206,14 @@ const Timers = ({ session }) => {
                     >
                         <Text style={styles.buttonText}>T</Text>
                     </TouchableOpacity>
+                    {/* // maybe future me will want pomodoro
                     <TouchableOpacity
                         style={[styles.button, mode === 'pomodoro' && styles.buttonActive]}
                         onPress={() => handleModeChange('pomodoro')}
                     >
                         <Text style={styles.buttonText}>P</Text>
                     </TouchableOpacity>
+                */}
                 </View>
     
                 {
@@ -221,10 +247,16 @@ const Timers = ({ session }) => {
                         />
                             <TouchableOpacity //study time
                                 style={styles.pomodoroTimer} 
-                                onPress={() => !isRunning && setModalVisible(true)}
+                                onPress={() => {
+                                    if (!isRunning) {
+                                        setIsStudy(true);
+                                        setModalVisible(true);
+                                    }
+                                }}
                             >
                                 <Text style={styles.timer}>{formatTime(time, true)}</Text>
                             </TouchableOpacity>
+
                             <TouchableOpacity //break time
                                 style={styles.breakTimer} 
                                 onPress={() => {
