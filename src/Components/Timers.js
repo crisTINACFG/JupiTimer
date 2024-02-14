@@ -8,26 +8,36 @@ const Timers = ({ session }) => {
     const [mode, setMode] = useState('stopwatch');
     const [startTime, setStartTime] = useState(null);
     const [timerDuration, setTimerDuration] = useState(25 * 60);
-    const [pomodoroDuration, setPomodoroDuration] = useState(25 * 60);
     const [modalVisible, setModalVisible] = useState(false);
     const [inputDuration, setInputDuration] = useState('');
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [label, setLabel] = useState('');
 
-    const formatTime = (timeInSeconds) => {
+    const [pomodoroDuration, setPomodoroDuration] = useState(25 * 60);
+    const [breakDuration, setBreakDuration] = useState(5*60);
+    const [isBreak, setIsBreak] = useState(false);
+
+    const handlePomodoroTimer = () => {
+
+    };
+
+    const formatTime = (timeInSeconds, omitHours = false) => {
         const hours = Math.floor(timeInSeconds / 3600);
         const minutes = Math.floor((timeInSeconds % 3600) / 60);
         const seconds = timeInSeconds % 60;
     
-        // Pad each time component to ensure it has at least two digits
         const paddedHours = hours.toString().padStart(2, '0');
         const paddedMinutes = minutes.toString().padStart(2, '0');
         const paddedSeconds = seconds.toString().padStart(2, '0');
     
-        // Format the time as "HH:MM:SS"
-        return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+        if (omitHours && hours === 0) {
+            // Format the time as "MM:SS"
+            return `${paddedMinutes}:${paddedSeconds}`;
+        } else {
+            // Format the time as "HH:MM:SS"
+            return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+        }
     };
-    
 
     const showElapsedTime = () => { //this function displays the time elapsed
         const elapsedTime = calculateElapsedTime()
@@ -96,7 +106,7 @@ const Timers = ({ session }) => {
 
     const writeToDatabase = async (startTime, stopTime, elapsedTime, label) => {
         if (elapsedTime < 1) {
-            // show an alert and return to prevent the database operation.
+            // show an alert and return to prevent the database operation if time elapsed is less than a second.
             window.alert('Time elapsed too short.');
             return;
         }
@@ -125,13 +135,8 @@ const Timers = ({ session }) => {
     };
     
     const handleStartStop = () => {
-        if (isRunning) {
-            // Directly use showElapsedTime to calculate and display the elapsed time
-            showElapsedTime(); // This function internally handles the calculation based on the current Date
-    
-            // If you need to write to the database and require the elapsed time for that,
-            // you should call calculateElapsedTime directly as it calculates the elapsed time.
-            // Since calculateElapsedTime already captures the current time internally, there's no need to pass it.
+        if (isRunning) { //if true then show elapsed time and write session to database.
+            showElapsedTime(); 
             const elapsedTime = calculateElapsedTime();
             writeToDatabase(startTime, new Date(), elapsedTime, label);
         } else {
@@ -139,12 +144,12 @@ const Timers = ({ session }) => {
             setStartTime(new Date());
         }
         // Toggle the running state
-        setIsRunning(!isRunning);
+        setIsRunning(!isRunning);   //changes the button to the opposite of what it is now
     };
 
     const handleTimeSet = () => {
-        const newDuration = parseInt(inputDuration) * 60;
-        if (!isNaN(newDuration) && newDuration > 0) {
+        const newDuration = parseInt(inputDuration) * 60;  //turns the input from minutes to seconds
+        if (!isNaN(newDuration) && newDuration > 0) {      //checks if Not a Number and > than 0. This ensures input provided is a valid, positive number.
             if (mode === 'timer') {
                 setTimerDuration(newDuration);
                 setTime(newDuration);
@@ -158,13 +163,8 @@ const Timers = ({ session }) => {
     };
 
     return (
-        <View
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            enabled
-        >
+        <View style={styles.container}>
             {/*Segmented control*/}
-            <View style={styles.container} >     
                 <View style={styles.segmentedControl}>
                     <TouchableOpacity
                         style={[styles.button, mode === 'stopwatch' && styles.buttonActive]}
@@ -186,26 +186,57 @@ const Timers = ({ session }) => {
                     </TouchableOpacity>
                 </View>
     
-                { //timer display
-                    mode === 'stopwatch' ? (
+                {
+                    mode === 'stopwatch' 
+                    ? ( 
                         <View style={styles.timerContainer}>
                             <Text style={styles.timer}>{formatTime(time)}</Text>
                         </View>
-                    ) : (
+                    )
+                    : mode === 'timer' 
+                    ? ( 
                         <TouchableOpacity 
                             style={styles.timerContainer} 
                             onPress={() => !isRunning && setModalVisible(true)}
                         >
-                            <Text style={styles.timer}>{formatTime(time)}</Text>
+                            <Text style={styles.timer}>{formatTime(time, true)}</Text>
                         </TouchableOpacity>
                     )
+                    : mode === 'pomodoro'
+                    ? (
+                        <>
+                        <View //line between two timers
+                        style={{
+                        backgroundColor: 'black', 
+                        width: 4,         
+                        height: 40,
+                        position:'absolute',
+                        bottom:122,
+                        borderRadius:3,
+                        }}
+                        />
+                            <TouchableOpacity 
+                                style={styles.pomodoroTimer} 
+                                onPress={() => !isRunning && setModalVisible(true)}
+                            >
+                                <Text style={styles.timer}>{formatTime(time, true)}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={styles.breakTimer} 
+                                onPress={() => !isRunning && setModalVisible(true)}
+                            >
+                                <Text style={styles.timer}>{formatTime(time, true)}</Text>
+                            </TouchableOpacity>
+                        </>
+                    )
+                    : null
                 }
+
                 {/*Start/stop button*/}
                 <TouchableOpacity style={styles.startButton} onPress={handleStartStop}>
                     <Text style={styles.startButtonText}>{isRunning ? 'Stop' : 'Start'}</Text>
                 </TouchableOpacity>
-            </View>
-             
+            
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -214,9 +245,12 @@ const Timers = ({ session }) => {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                        <TouchableOpacity style={styles.exitButton} onPress={() => setModalVisible(false)}>
+
+                        {/*exit button*/}
+                        <TouchableOpacity style={styles.exitButton} onPress={() => setModalVisible(false)}> 
                             <Text style={styles.exitButtonText}>X</Text>
                         </TouchableOpacity>
+
                         <TextInput
                             style={[styles.input, isInputFocused ? styles.inputFocused : null]}
                             onChangeText={setInputDuration}
@@ -232,8 +266,6 @@ const Timers = ({ session }) => {
                     </View>
                 </View>
             </Modal>
-   
-
         </View>
     );
 };
@@ -242,7 +274,7 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: 'white',
     },
     segmentedControl: {
         flexDirection: 'row',
@@ -264,7 +296,17 @@ const styles = StyleSheet.create({
     },
     timerContainer: {
         alignItems: 'center',
-        marginTop: 500,
+        marginTop: 540,
+    },
+    pomodoroTimer: {
+        position:'relative',
+        top:540,
+        right:70,
+    },
+    breakTimer: {
+        position:'relative',
+        top:476,
+        left:70,
     },
     timer: {
         fontSize: 48,
@@ -272,13 +314,14 @@ const styles = StyleSheet.create({
         color: 'black',
     },
     startButton: {
+        position: 'absolute',
         paddingVertical: 10,
         paddingHorizontal: 20,
         backgroundColor: 'blue',
         borderRadius: 10,
         borderWidth: 1,
         borderColor: 'white',
-        marginTop: 30,
+        bottom:50,
     },
     startButtonText: {
         color: 'white',
