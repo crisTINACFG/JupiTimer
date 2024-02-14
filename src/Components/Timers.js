@@ -153,12 +153,16 @@ const Timers = ({ session }) => {
             if (mode === 'timer') {
                 setTimerDuration(newDuration);
                 setTime(newDuration);
-            } else if (mode === 'pomodoro') {
+            } else if (mode === 'pomodoro' && !isBreak) { //study timer
                 setPomodoroDuration(newDuration);
+                setTime(newDuration);
+            } else if (mode === 'pomodoro' && isBreak) { //break timer
+                setBreakDuration(newDuration);
                 setTime(newDuration);
             }
         }
         setModalVisible(false);
+        setIsBreak(false);
         setInputDuration('');
     };
 
@@ -215,17 +219,22 @@ const Timers = ({ session }) => {
                         borderRadius:3,
                         }}
                         />
-                            <TouchableOpacity 
+                            <TouchableOpacity //study time
                                 style={styles.pomodoroTimer} 
                                 onPress={() => !isRunning && setModalVisible(true)}
                             >
                                 <Text style={styles.timer}>{formatTime(time, true)}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
+                            <TouchableOpacity //break time
                                 style={styles.breakTimer} 
-                                onPress={() => !isRunning && setModalVisible(true)}
+                                onPress={() => {
+                                    if (!isRunning) {
+                                        setIsBreak(true);
+                                        setModalVisible(true);
+                                    }
+                                }}
                             >
-                                <Text style={styles.timer}>{formatTime(time, true)}</Text>
+                                <Text style={styles.timer}>{formatTime(breakDuration, true)}</Text>
                             </TouchableOpacity>
                         </>
                     )
