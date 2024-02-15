@@ -12,6 +12,8 @@ export default function settingsScreen({ session, onToggleSettings }) {
   // Allow avatarUrl to be either string or null
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
+  
+
   useEffect(() => {
     if (session) getProfile();
   }, [session]);

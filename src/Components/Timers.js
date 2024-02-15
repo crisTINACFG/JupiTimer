@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, Platform, Modal, Alert } from 'react-native';
 import { supabase } from '../api/supabaseClient';
 
-const Timers = ({ session }) => {
+const Timers = ({ session, selectedLabel, labelsLength }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [mode, setMode] = useState('stopwatch');
@@ -40,7 +40,11 @@ const Timers = ({ session }) => {
         const stopTime = new Date();
         return Math.floor((stopTime - startTime) / 1000);
     };
-  
+    
+    useEffect(() => {
+        setLabel(selectedLabel);
+    },[selectedLabel]);
+
     useEffect(() => { //controls behaviour of the timers based on the users actions or mode. When the isRunning state is true 
         //(timer has been started), it sets up an interval that executes a function every 1000 milliseconds (1 second).
         // This function updates the time state to either count up (stopwatch mode) or count down ( timer ).
@@ -107,7 +111,7 @@ const Timers = ({ session }) => {
                     starttime: startTime.toISOString(),  
                     stoptime: stopTime.toISOString(),   
                     elapsedtime: formattedElapsedTime,  
-                    label: 'temporary',
+                    label_text: label,
                     planet_type: 'Earth'  
                 }
             ]);
@@ -118,16 +122,20 @@ const Timers = ({ session }) => {
     };
     
     const handleStartStop = () => {
-        if (isRunning) { //if true then show elapsed time and write session to database.
-            showElapsedTime(); 
-            const elapsedTime = calculateElapsedTime();
-            writeToDatabase(startTime, new Date(), elapsedTime, label);
+        if (labelsLength > 0) {
+            if (isRunning) { //if true then show elapsed time and write session to database.
+                showElapsedTime(); 
+                const elapsedTime = calculateElapsedTime();
+                writeToDatabase(startTime, new Date(), elapsedTime, label);
+            } else {
+                // Start the timer by setting the startTime to the current time
+                setStartTime(new Date());
+            }
+            // Toggle the running state
+            setIsRunning(!isRunning);   //changes the button to the opposite of what it is now
         } else {
-            // Start the timer by setting the startTime to the current time
-            setStartTime(new Date());
+            Alert.alert("No labels", "Create a label before starting the timer.");
         }
-        // Toggle the running state
-        setIsRunning(!isRunning);   //changes the button to the opposite of what it is now
     };
 
     const handleTimeSet = () => {
@@ -219,7 +227,6 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         alignItems: 'center',
-        backgroundColor: 'white',
     },
     segmentedControl: {
         flexDirection: 'row',
