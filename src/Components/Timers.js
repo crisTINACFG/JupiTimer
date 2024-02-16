@@ -60,8 +60,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                 setTime(currentTime => {
                     if (currentTime <= 1 && mode === 'timer') { //if time remaining is 1 or less then stop the timer
                         clearInterval(interval);
-                        setIsRunning(false);
-                        showElapsedTime();
+                        handleStartStop();
                         return 0; // Stop the timer at zero
                     }
                     if (mode === 'stopwatch') {
