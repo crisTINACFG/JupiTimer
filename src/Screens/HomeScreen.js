@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput} from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput, Alert} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
 import Timers from '../Components/Timers';
@@ -14,30 +14,68 @@ export default function HomeScreen({ session }) {
     const [showModal, setShowModal] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [isProductive, setIsProductive] = useState(false);
+
+    const [labelIdToUserIdMap, setLabelIdToUserIdMap] = useState({});
+
     const currentLabel = labels.find(label => label.id === selectedLabel);
 
     useEffect(() => {
-        if (selectedLabel === 'new') {
-          setShowModal(true);
-        }
-      }, [selectedLabel]);
-
-    useEffect(() => {
-        if (session) fetchLabels();
-    }, [session]);
+        let mounted = true;
+      
+        const subscription = supabase
+          .channel('room1')
+          .on('postgres_changes', { 
+              event: '*', 
+              schema: 'public', 
+              table: 'labels'}, 
+              payload => {
+                if (!mounted) {
+                  return;
+                }
+                console.log('Change received!', payload);
+                if (payload.eventType === 'DELETE') {
+                  // Check if the deleted label's ID is mapped to the current user's ID
+                  if (labelIdToUserIdMap[payload.old.id] === session.user.id) {
+                      console.log('detected old change with delete');
+                      fetchLabels();
+                  }
+                } else {
+                  // For non-DELETE events, check if the user ID matches the current session's user ID
+                  const relevantChange = payload.new?.user_id === session.user.id || payload.old?.user_id === session.user.id;
+                  if (relevantChange) {
+                      console.log('relavant change yuh');
+                      fetchLabels();
+                  }
+                }
+              })
+          .subscribe();
+      
+        fetchLabels(); // Initial fetch
+      
+        return () => {
+          mounted = false;
+          subscription.unsubscribe();
+        };
+      }, [session.user.id, labelIdToUserIdMap]);      
 
     async function fetchLabels() {
-
         const { data, error } = await supabase
         .from('labels')
-        .select('id, label_text, is_productive')
+        .select('id, user_id, label_text, is_productive')
         .eq('user_id', session.user.id)
 
         if (error) {
-            return null
+            console.error('Error fetching labels:', error);
           }
         else {
             setLabels(data);
+            // Update the label ID to user ID mapping in order to check for real_time deletes
+            const newMap = data.reduce((map, label) => {
+                map[label.id] = label.user_id;
+                return map;
+            }, {});
+            setLabelIdToUserIdMap(newMap);
+
             if (data.length > 0) {
                 setSelectedLabel(data[0].id);
             }
@@ -65,7 +103,7 @@ export default function HomeScreen({ session }) {
             if (error) {
                 throw error;
             } else {
-                await fetchLabels(); // Ensure labels are fetched before continuing
+                await fetchLabels(); // Ensures labels are fetched before continuing
             }
         } catch (error) {
             if (error instanceof Error) {
