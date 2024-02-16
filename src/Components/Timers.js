@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TextInput, Platform, Modal, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import { supabase } from '../api/supabaseClient';
 
 const Timers = ({ session, selectedLabel, labelsLength }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [mode, setMode] = useState('stopwatch');
-    const [startTime, setStartTime] = useState(null);
+    const [startTime, setStartTime] = useState(new Date());
     const [timerDuration, setTimerDuration] = useState(25 * 60);
     const [modalVisible, setModalVisible] = useState(false);
     const [inputDuration, setInputDuration] = useState('');
@@ -31,15 +31,20 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
         }
     };
 
-    const showElapsedTime = () => { 
+    const showElapsedTime = useCallback(() => { 
         const elapsedTime = calculateElapsedTime()
         Alert.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
+    }, [calculateElapsedTime, formatTime]);
+
+    const calculateElapsedTime = () => {
+        const stopTime = new Date();
+        // Check for startTime not being null
+        if (startTime) {
+            return Math.floor((stopTime - startTime) / 1000);
+        }
+        return 0;
     };
 
-    const calculateElapsedTime = () => { //calculates the time elapsed based on the mode
-        const stopTime = new Date();
-        return Math.floor((stopTime - startTime) / 1000);
-    };
     
     useEffect(() => {
         setLabel(selectedLabel);
@@ -78,7 +83,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
         }
         return () => clearInterval(interval); //cleanup function react calls when component unmounts or before re-running due to changes
         //in its dependencies, this cleanup prevents the interval from continuing to run or update state in an unmounted component.
-    }, [isRunning, mode, timerDuration, showElapsedTime, startTime]); //these are dependencies, if these change then the
+    },[isRunning, mode, timerDuration, startTime]); //these are dependencies, if these change then the
     //effect re-runs to reflect the lastest state and props!!!
     
 
@@ -129,7 +134,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                 writeToDatabase(startTime, new Date(), elapsedTime, label);
             } else {
                 // Start the timer by setting the startTime to the current time
-                setStartTime(new Date());
+                setStartTime(new Date()); // Reset the startTime when starting the timer
             }
             // Toggle the running state
             setIsRunning(!isRunning);   //changes the button to the opposite of what it is now

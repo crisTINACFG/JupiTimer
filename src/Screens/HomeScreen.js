@@ -36,14 +36,12 @@ export default function HomeScreen({ session }) {
                 if (payload.eventType === 'DELETE') {
                   // Check if the deleted label's ID is mapped to the current user's ID
                   if (labelIdToUserIdMap[payload.old.id] === session.user.id) {
-                      console.log('detected old change with delete');
                       fetchLabels();
                   }
                 } else {
                   // For non-DELETE events, check if the user ID matches the current session's user ID
                   const relevantChange = payload.new?.user_id === session.user.id || payload.old?.user_id === session.user.id;
                   if (relevantChange) {
-                      console.log('relavant change yuh');
                       fetchLabels();
                   }
                 }
