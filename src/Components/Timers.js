@@ -139,8 +139,10 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
     const handleStartStop = () => {
         if (labelsLength > 0) {
             if (isRunning) { //if true then show elapsed time and write session to database.
-                setSessionEnd(true); 
                 const elapsedTime = calculateElapsedTime();
+                if (elapsedTime > 0) {
+                    setSessionEnd(true); 
+                };
                 writeToDatabase(startTime, new Date(), elapsedTime, label);
             } else {
                 // Start the timer by setting the startTime to the current time
@@ -244,6 +246,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                 <View style={styles.centeredView}>
                     <View style={styles.productivityModal}>
                         <Text>What percentage of your planned task did you complete?</Text>
+                        <Text style={styles.percentage}>{actualProductivity}%</Text>
                         <Slider
                             style={{width: 200, height: 40}}
                             minimumValue={0}
@@ -255,7 +258,6 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                             maximumTrackTintColor="#d3d3d3"
                             thumbTintColor="#b9e4c9"
                         />
-                        <Text>{actualProductivity}%</Text>
                         <TouchableOpacity
                             style={styles.button}
                             onPress={() => {
@@ -277,6 +279,11 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         alignItems: 'center',
+    },
+    percentage:{
+        position:'absolute',
+        right:50,
+        top:69,
     },
     backdrop: {
         flex: 1,
@@ -376,10 +383,10 @@ const styles = StyleSheet.create({
         elevation: 10,
         borderRadius: 10,
         position: 'absolute', 
-        top: 200, 
+        top: 300, 
         left: 50,
         right:50,
-        bottom: 200,
+        bottom: 300,
     },
     input: {
         height: 40,
