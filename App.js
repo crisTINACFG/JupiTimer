@@ -1,15 +1,16 @@
 import 'react-native-url-polyfill/auto';
 import React, { useState, useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import { supabase } from './src/api/supabaseClient';
 import Auth from './src/api/Auth';
-import HomeScreen from './src/Screens/HomeScreen';
-import { StyleSheet } from 'react-native';
-import { Session } from '@supabase/supabase-js';
 import { logout } from './src/api/supabaseClient';
+import HomeScreen from './src/Screens/HomeScreen';
 
+const Drawer = createDrawerNavigator();
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState(null);
 
   useEffect(() => {
     logout();
@@ -30,21 +31,27 @@ export default function App() {
     //useEffect(() => { ... }, []); the empty [] ensures effect runs onlu after initial render
   }, []);
 
-  // 'session && session.user' way to determine if a user is currently authenticated
-  return session && session.user ? <HomeScreen key={session.user.id} session={session} />: <Auth/>;
-}
+  function AuthenticatedApp() {
+    return (
+      <NavigationContainer>
+        <Drawer.Navigator 
+        initialRouteName="Home"
+        screenOptions={{
+          headerShown: false,
+          drawerStyle: {
+            width: 150,
+          },
+        }}
+          >
+          <Drawer.Screen name="Home" component={HomeScreen} initialParams={{ session: session }} />
+        </Drawer.Navigator>
+      </NavigationContainer>
+    );
+  }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 12,
-    backgroundColor: 'white',
-  },
-  verticallySpaced: {
-    paddingTop: 4,
-    paddingBottom: 4,
-    alignSelf: 'stretch',
-  },
-  mt20: {
-    marginTop: 20,
-  },
-})
+  if (session && session.user) {
+    return <AuthenticatedApp />;
+  } else {
+    return <Auth />;
+  }
+}

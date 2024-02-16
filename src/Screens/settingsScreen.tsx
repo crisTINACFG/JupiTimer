@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { logout } from '../api/supabaseClient';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { Iconify } from 'react-native-iconify';
 import { supabase } from '../api/supabaseClient';
 import { Button, Input } from 'react-native-elements';
 import Avatar from '../Components/Avatar';
@@ -126,7 +126,7 @@ export default function settingsScreen({ session, onToggleSettings }) {
  
       {/* Exit button */}
       <TouchableOpacity onPress={onToggleSettings} style={styles.settingsButton}>
-          <Icon name="cog" size={24} color="#000" /> 
+        <Iconify icon="material-symbols:settings-heart-outline" size={35} color="#000" />
       </TouchableOpacity>
 
       {/* Logout button */}

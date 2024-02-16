@@ -4,10 +4,12 @@ import {Picker} from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
 import Timers from '../Components/Timers';
 import SettingsScreen from './settingsScreen';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { Iconify } from 'react-native-iconify';
 import { supabase } from '../api/supabaseClient'; 
+import MenuButton from '../Components/MenuButton';
 
-export default function HomeScreen({ session }) {
+export default function HomeScreen({ route }) {
+    const { session } = route.params;
     const [settingsToggle, setSettingsToggle] = useState(false);
     const [labels, setLabels] = useState([]);
     const [selectedLabel, setSelectedLabel] = useState(null);
@@ -117,6 +119,9 @@ export default function HomeScreen({ session }) {
 
     return (
         <View style={styles.container}>
+            <View style={styles.menu}>
+                <MenuButton/>
+            </View>
 
             <View style = {styles.picker}>
             <Picker
@@ -183,7 +188,7 @@ export default function HomeScreen({ session }) {
 
 
             <TouchableOpacity onPress={handleToggleSettings} style={styles.settingsButton}>
-                <Icon name="cog" size={24} color="#000" />
+                <Iconify icon="material-symbols:settings-heart-outline" size={35} color="#000" />
             </TouchableOpacity>
 
             {settingsToggle && (
@@ -199,6 +204,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff',
+    },
+    menu:{
+        position:'absolute',
+        left: 0,
+        top: 15,
     },
     settingsButton: {
         position: 'absolute',

@@ -106,7 +106,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
         }
     };
 
-    const writeToDatabase = async (startTime, stopTime, elapsedTime, label) => {
+    const writeToDatabase = async (startTime, stopTime, elapsedTime, label, actualProductivity) => {
         if (elapsedTime < 1) {
             // show an alert and return to prevent the database operation if time elapsed is less than a second.
             window.alert('Time elapsed too short.');
@@ -127,7 +127,8 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                     stoptime: stopTime.toISOString(),   
                     elapsedtime: formattedElapsedTime,  
                     label_text: label,
-                    planet_type: 'Earth'  
+                    planet_type: 'Earth'  ,
+                    actualproductivity: actualProductivity
                 }
             ]);
     
@@ -141,18 +142,25 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
             if (isRunning) { //if true then show elapsed time and write session to database.
                 const elapsedTime = calculateElapsedTime();
                 if (elapsedTime > 0) {
+                    setElapsedTime(elapsedTime);
                     setSessionEnd(true); 
                 };
-                writeToDatabase(startTime, new Date(), elapsedTime, label);
             } else {
                 // Start the timer by setting the startTime to the current time
                 setStartTime(new Date()); // Reset the startTime when starting the timer
+                setIsRunning(true);
             }
             // Toggle the running state
             setIsRunning(!isRunning); //changes the button to the opposite of what it is now 
         } else {
             Alert.alert("No labels", "Create a label before starting the timer.");
         }
+    };
+
+    const handleConfirmProductivity = () => {
+        writeToDatabase(startTime, new Date(), elapsedTime, label, actualProductivity);
+        setSessionEnd(false); 
+        setIsRunning(false); 
     };
 
     const handleTimeSet = () => {
@@ -260,10 +268,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                         />
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={() => {
-                                setActualProductivity(actualProductivity);
-                                setSessionEnd(false); // Close the modal
-                            }}
+                            onPress={handleConfirmProductivity} 
                         >
                             <Text style={styles.buttonText}>Confirm</Text>
                         </TouchableOpacity>
