@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput, Alert} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
@@ -14,6 +14,7 @@ export default function HomeScreen({ session }) {
     const [showModal, setShowModal] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [isProductive, setIsProductive] = useState(false);
+    const initialFetch = useRef(true);
 
     const [labelIdToUserIdMap, setLabelIdToUserIdMap] = useState({});
 
@@ -74,8 +75,9 @@ export default function HomeScreen({ session }) {
             }, {});
             setLabelIdToUserIdMap(newMap);
 
-            if (data.length > 0) {
+            if (initialFetch.current && data.length > 0) {
                 setSelectedLabel(data[0].id);
+                initialFetch.current = false;
             }
         }
     }

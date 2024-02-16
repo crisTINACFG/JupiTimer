@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { supabase } from '../api/supabaseClient';
 
 const Timers = ({ session, selectedLabel, labelsLength }) => {
@@ -12,6 +13,10 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
     const [inputDuration, setInputDuration] = useState('');
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [label, setLabel] = useState('');  
+
+    const [sessionEnd, setSessionEnd] = useState(false);
+    const [elapsedTime, setElapsedTime] = useState(0);
+    const [actualProductivity, setActualProductivity] = useState(0);
 
     const formatTime = (timeInSeconds, omitHours = false) => {
         const hours = Math.floor(timeInSeconds / 3600);
@@ -35,6 +40,12 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
         const elapsedTime = calculateElapsedTime()
         Alert.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
     }, [calculateElapsedTime, formatTime]);
+
+    const showSessionEnd = () => {
+        const elapsedTime = calculateElapsedTime() 
+        setElapsedTime(elapsedTime);
+
+    };
 
     const calculateElapsedTime = () => {
         const stopTime = new Date();
@@ -128,7 +139,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
     const handleStartStop = () => {
         if (labelsLength > 0) {
             if (isRunning) { //if true then show elapsed time and write session to database.
-                showElapsedTime(); 
+                setSessionEnd(true); 
                 const elapsedTime = calculateElapsedTime();
                 writeToDatabase(startTime, new Date(), elapsedTime, label);
             } else {
@@ -136,7 +147,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                 setStartTime(new Date()); // Reset the startTime when starting the timer
             }
             // Toggle the running state
-            setIsRunning(!isRunning);   //changes the button to the opposite of what it is now
+            setIsRunning(!isRunning); //changes the button to the opposite of what it is now 
         } else {
             Alert.alert("No labels", "Create a label before starting the timer.");
         }
@@ -195,7 +206,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                 </TouchableOpacity>
             
             <Modal
-                animationType="slide"
+                animationType="fade"
                 transparent={true}
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(!modalVisible)}
@@ -223,6 +234,41 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                     </View>
                 </View>
             </Modal>
+
+            <Modal
+            animationType="slide"
+            transparent={true}
+            visible={sessionEnd}
+            onRequestClose={() => setSessionEnd(false)}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.productivityModal}>
+                        <Text>What percentage of your planned task did you complete?</Text>
+                        <Slider
+                            style={{width: 200, height: 40}}
+                            minimumValue={0}
+                            maximumValue={100}
+                            step={1}
+                            value={actualProductivity}
+                            onValueChange={setActualProductivity}
+                            minimumTrackTintColor="#1fb28a"
+                            maximumTrackTintColor="#d3d3d3"
+                            thumbTintColor="#b9e4c9"
+                        />
+                        <Text>{actualProductivity}%</Text>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => {
+                                setActualProductivity(actualProductivity);
+                                setSessionEnd(false); // Close the modal
+                            }}
+                        >
+                            <Text style={styles.buttonText}>Confirm</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
         </View>
     );
 };
@@ -232,6 +278,12 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         alignItems: 'center',
     },
+    backdrop: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+      },
     segmentedControl: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -310,6 +362,24 @@ const styles = StyleSheet.create({
         position: 'absolute', 
         borderRadius: 10,
         
+    },
+    productivityModal: {
+        backgroundColor: 'white',
+        padding: 25,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+        elevation: 10,
+        borderRadius: 10,
+        position: 'absolute', 
+        top: 200, 
+        left: 50,
+        right:50,
+        bottom: 200,
     },
     input: {
         height: 40,

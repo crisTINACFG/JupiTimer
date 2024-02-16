@@ -8,12 +8,6 @@
 //Calculate expected by considering a non-linear model where the more distractions
 //causes a greater effect, i could use exponential?
 
-//functions: handleProductivityRating, handleDistractions, handleEfficiencyCalculation
-
-//add a new row to my session table to save the actual productivity, the amount of distractions
-// the calculated efficiency
-
-
 export function handleDistractions() {
     //return the total amount of distractions
 }
