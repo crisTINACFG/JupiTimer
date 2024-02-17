@@ -2,10 +2,25 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { supabase } from '../api/supabaseClient';
-import { BoltOutlined } from '@mui/icons-material';
 
-const Timers = ({ session, selectedLabel, labelsLength }) => {
-    const [isRunning, setIsRunning] = useState(false);
+const Timers = ({ 
+    session,
+    selectedLabel, 
+    labelsLength, 
+    distractionCount, 
+    setDistractionCount, 
+    isRunning, 
+    setIsRunning, 
+    actualProductivity, 
+    setActualProductivity,
+    efficiency,
+    setEfficiency,
+    showEndPromps, 
+    setShowEndPromps,
+    elapsedTime, 
+    setElapsedTime
+    }) => {
+
     const [time, setTime] = useState(0);
     const [mode, setMode] = useState('stopwatch');
     const [startTime, setStartTime] = useState(new Date());
@@ -16,8 +31,6 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
     const [label, setLabel] = useState('');  
 
     const [sessionEnd, setSessionEnd] = useState(false);
-    const [elapsedTime, setElapsedTime] = useState(0);
-    const [actualProductivity, setActualProductivity] = useState(0);
 
     const formatTime = (timeInSeconds, omitHours = false) => {
         const hours = Math.floor(timeInSeconds / 3600);
@@ -35,17 +48,6 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
             // Format the time as "HH:MM:SS"
             return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
         }
-    };
-
-    const showElapsedTime = useCallback(() => { 
-        const elapsedTime = calculateElapsedTime()
-        Alert.alert(`Time Elapsed: ${formatTime(elapsedTime)}`);
-    }, [calculateElapsedTime, formatTime]);
-
-    const showSessionEnd = () => {
-        const elapsedTime = calculateElapsedTime() 
-        setElapsedTime(elapsedTime);
-
     };
 
     const calculateElapsedTime = () => {
@@ -107,7 +109,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
         }
     };
 
-    const writeToDatabase = async (startTime, stopTime, elapsedTime, label, actualProductivity) => {
+    const writeToDatabase = async (startTime, stopTime, elapsedTime, label, actualProductivity, distractionCount, efficiency) => {
         if (elapsedTime < 1) {
             // show an alert and return to prevent the database operation if time elapsed is less than a second.
             window.alert('Time elapsed too short.');
@@ -129,7 +131,9 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                     elapsedtime: formattedElapsedTime,  
                     label_text: label,
                     planet_type: 'Earth'  ,
-                    actualproductivity: actualProductivity
+                    actualproductivity: actualProductivity,
+                    totaldistractions: distractionCount,
+                    efficiency:efficiency
                 }
             ]);
     
@@ -161,7 +165,11 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
     };
 
     const handleConfirmProductivity = () => {
-        writeToDatabase(startTime, new Date(), elapsedTime, label, actualProductivity);
+
+        efficiency = actualProductivity - (100 - 2*  distractionCount) //think about a non-linear model instead
+        setEfficiency(efficiency)
+        setShowEndPromps(true);
+        writeToDatabase(startTime, new Date(), elapsedTime, label, actualProductivity, distractionCount, efficiency);
         setSessionEnd(false); 
         setIsRunning(false); 
     };
@@ -219,7 +227,7 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                 </TouchableOpacity>
             
             <Modal
-                animationType="fade"
+                animationType="slide"
                 transparent={true}
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(!modalVisible)}
@@ -256,18 +264,18 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.productivityModal}>
-                        <Text>What percentage of your planned task did you complete?</Text>
+                        <Text style={styles.percentageText}>What percentage of your planned task did you complete?</Text>
                         <Text style={styles.percentage}>{actualProductivity}%</Text>
                         <Slider
-                            style={{width: 200, height: 40}}
+                            style={styles.slider}
                             minimumValue={0}
                             maximumValue={100}
                             step={1}
                             value={actualProductivity}
                             onValueChange={setActualProductivity}
-                            minimumTrackTintColor="#1fb28a"
+                            minimumTrackTintColor="#886ef1"
                             maximumTrackTintColor="#d3d3d3"
-                            thumbTintColor="#b9e4c9"
+                            thumbTintColor="#5310B4"
                         />
                         <TouchableOpacity
                             style={styles.button}
@@ -288,10 +296,20 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         alignItems: 'center',
     },
+    slider:{
+        width: 290, 
+        height: 40,
+        color:'pink',
+    },
     percentage:{
+        fontSize: 16,
         position:'absolute',
-        right:50,
-        top:69,
+        right:30,
+        top:80,
+    },
+    percentageText:{
+        marginLeft:10,
+        fontSize:17,
     },
     backdrop: {
         flex: 1,
@@ -340,7 +358,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         paddingVertical: 10,
         paddingHorizontal: 20,
-        backgroundColor: 'pink',
+        backgroundColor: '#F9B9CF',
         borderRadius: 10,
         borderWidth: 1,
         borderColor: 'white',
@@ -389,7 +407,9 @@ const styles = StyleSheet.create({
     },
     productivityModal: {
         backgroundColor: 'white',
-        padding: 25,
+        padding: 10,
+        paddingTop:30,
+        height:220,
         shadowColor: '#000',
         shadowOffset: {
             width: 1,
@@ -399,11 +419,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 10,
         borderRadius: 10,
-        position: 'absolute', 
-        top: 300, 
-        left: 50,
-        right:50,
-        bottom: 300,
     },
     input: {
         height: 40,

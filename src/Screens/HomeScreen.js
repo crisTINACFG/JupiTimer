@@ -17,6 +17,15 @@ export default function HomeScreen({ route }) {
     const [newLabelName, setNewLabelName] = useState('');
     const [isProductive, setIsProductive] = useState(false);
     const initialFetch = useRef(true);
+    const [distractionCount, setDistractionCount] = useState(0);
+    const [isRunning, setIsRunning] = useState(false);
+    const [elapsedTime, setElapsedTime] = useState(0);
+
+    const [showEndPromps, setShowEndPromps] = useState(false);
+
+    const [predictedProductivity, setPredictedProductivity] = useState(0);
+    const [actualProductivity, setActualProductivity] = useState(0);
+    const [efficiency, setEfficiency] = useState(0);
 
     const [labelIdToUserIdMap, setLabelIdToUserIdMap] = useState({});
 
@@ -88,6 +97,24 @@ export default function HomeScreen({ route }) {
         setSettingsToggle(!settingsToggle);
     };
 
+    const formatTime = (timeInSeconds, omitHours = false) => {
+        const hours = Math.floor(timeInSeconds / 3600);
+        const minutes = Math.floor((timeInSeconds % 3600) / 60);
+        const seconds = timeInSeconds % 60;
+    
+        const paddedHours = hours.toString().padStart(2, '0');
+        const paddedMinutes = minutes.toString().padStart(2, '0');
+        const paddedSeconds = seconds.toString().padStart(2, '0');
+    
+        if (omitHours && hours === 0) {
+            // Format the time as "MM:SS"
+            return `${paddedMinutes}:${paddedSeconds}`;
+        } else {
+            // Format the time as "HH:MM:SS"
+            return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+        }
+    };
+
     const addNewLabel = async () => {
         try {
             if (!session?.user) throw new Error('No user on the session!');
@@ -117,35 +144,51 @@ export default function HomeScreen({ route }) {
         }
     };
 
+    const handleDistractionCounter = () => {
+        setDistractionCount(distractionCount + 1);
+    };
+
+
     return (
         <View style={styles.container}>
             <View style={styles.menu}>
                 <MenuButton/>
             </View>
 
-            <View style = {styles.picker}>
-            <Picker
-                selectedValue={selectedLabel}
-                onValueChange={(itemValue, itemIndex) => {
-                    if (itemValue === 'new') {
-                        setShowModal(true);
-                    } else {
-                        setSelectedLabel(itemValue);
-                    }
-                }}
-            >
-                {labels.length === 0 && (
-                    <Picker.Item label="No labels available" value="null" enabled={false} />
-                )}
-                {labels.map((label, index) => (
-                    <Picker.Item key={index} label={label.label_text} value={label.id} />
-                ))}
-                <Picker.Item label="Add new label..." value="new" />
-            </Picker>
-            </View>
+            { 
+            !isRunning && ( //only render picker if timer is not running
+                <View style = {styles.picker}>
+                    <Picker
+                        selectedValue={selectedLabel}
+                        onValueChange={(itemValue, itemIndex) => {
+                            if (itemValue === 'new') {
+                                setShowModal(true);
+                            } else {
+                                setSelectedLabel(itemValue);
+                            }
+                        }}
+                    >
+                        {labels.length === 0 && (
+                            <Picker.Item label="No labels available" value="null" enabled={false} />
+                        )}
+                        {labels.map((label, index) => (
+                            <Picker.Item key={index} label={label.label_text} value={label.id} />
+                        ))}
+                        <Picker.Item label="Add new label..." value="new" />
+                    </Picker>
+                </View>
+            )}
 
-            <TouchableOpacity style={styles.distraction}>
-            </TouchableOpacity>
+            { //Distraction counter button only rendered if isRunning
+            isRunning && ( 
+                    <TouchableOpacity 
+                    style={styles.distraction}
+                    onPress = {handleDistractionCounter}>
+                        <Text style={styles.distractionText}>
+                        {distractionCount > 0 ? distractionCount : ''}
+                        </Text>
+                    </TouchableOpacity>
+            )}
 
             <Modal
                 visible={showModal}
@@ -168,7 +211,7 @@ export default function HomeScreen({ route }) {
                         onStartShouldSetResponder={() => true} // This prevents touch events from bubbling up to the parent TouchableOpacity
                     >
                         <TextInput
-                            placeholder="Label Name"
+                            placeholder="Enter Label Name:"
                             value={newLabelName}
                             onChangeText={setNewLabelName}
                             style={styles.input}
@@ -181,13 +224,60 @@ export default function HomeScreen({ route }) {
                             <Text>Is Productive?</Text>
                         </View>
                         <TouchableOpacity onPress={addNewLabel} style={styles.button}>
-                            <Text>Add Label</Text>
+                            <Text >Add Label</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
             </Modal>
 
-            <Timers session={session} selectedLabel={currentLabel ? currentLabel.label_text : ''} labelsLength ={labels.length} />
+           
+            <Modal
+            visible={showEndPromps}
+            transparent={true}
+            onRequestClose={() => {
+                setShowEndPromps(false);
+            }}
+            animationType="slide">
+
+                <TouchableOpacity
+                    style={styles.centeredView}
+                    activeOpacity={1}
+                    onPressOut={() => {[ 
+                        setDistractionCount(0),
+                        setShowEndPromps(false)];
+                    }}>
+                   <View style={styles.endView} onStartShouldSetResponder={() => true}>
+                        <Text>Time elapsed: {formatTime(elapsedTime)}</Text>
+                        <Text>Distractions: {distractionCount}</Text>
+                        <Text>Productivity: {actualProductivity}%</Text>
+                        {efficiency !== 0 && (
+                        <Text>
+                            You were {efficiency > 0 ? `${efficiency}% more` : `${Math.abs(efficiency)}% less`} efficient than predicted
+                        </Text>
+                        )}
+                   </View>
+                </TouchableOpacity>
+
+            </Modal>
+            
+
+            <Timers 
+            elapsedTime={elapsedTime} 
+            setElapsedTime={setElapsedTime}
+            showEndPromps={showEndPromps}
+            setShowEndPromps={setShowEndPromps}
+            efficiency={efficiency}
+            setEfficiency={setEfficiency}
+            actualProductivity={actualProductivity}
+            setActualProductivity={setActualProductivity}
+            isRunning={isRunning} 
+            setIsRunning={setIsRunning}
+            distractionCount={distractionCount} 
+            setDistractionCount={setDistractionCount}
+            session={session} 
+            selectedLabel={currentLabel ? currentLabel.label_text : ''} 
+            labelsLength ={labels.length} 
+            />
 
 
             <TouchableOpacity onPress={handleToggleSettings} style={styles.settingsButton}>
@@ -213,12 +303,34 @@ const styles = StyleSheet.create({
         left: 0,
         top: 15,
     },
+    endView:{
+        backgroundColor: 'white',
+        padding:15,
+        paddingHorizontal:50,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+        elevation: 10,
+        position: 'absolute', 
+        borderRadius: 10,
+    },
+    distractionPromt:{
+        flex:1,
+    },
     distraction: {
-        padding: 25,
-        backgroundColor:'darkred',
+        width: 50, 
+        height: 50,
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor:'#F9B9CF',
         position:'absolute',
-        right:25,
-        bottom:173,
+        right: 100,
+        bottom:49,
         borderRadius:40,
         borderWidth: 1,
         borderColor: 'white',
@@ -231,6 +343,11 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
+    distractionText: {
+        color: 'black',
+        fontWeight:'bold',
+        fontSize:15,
+    },
     settingsButton: {
         position: 'absolute',
         top: 4,
@@ -240,7 +357,7 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'left',
         alignItems: 'center',
     },
     input: {
@@ -253,11 +370,28 @@ const styles = StyleSheet.create({
     checkboxContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        position:'absolute',
+        left:20,
+        top: 85,
     },
     button: {
-        backgroundColor: 'lightblue',
-        padding: 10,
+        backgroundColor: '#F9B9CF',
+        position:'absolute',
+        padding: 8,
+        right:44,
+        top: 72,
         marginTop: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'white',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     picker: {
         position: 'absolute',
@@ -268,8 +402,9 @@ const styles = StyleSheet.create({
     },
     modalView: {
         backgroundColor: 'white',
-        paddingVertical:30,
-        paddingHorizontal:100,
+        padding:15,
+        height:150,
+        width:300,
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: {
@@ -281,7 +416,6 @@ const styles = StyleSheet.create({
         elevation: 10,
         position: 'absolute', 
         borderRadius: 10,
-        
     },
     centeredView: {
         flex: 1,

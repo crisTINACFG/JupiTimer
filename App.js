@@ -5,7 +5,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { supabase } from './src/api/supabaseClient';
 import Auth from './src/api/Auth';
 import { logout } from './src/api/supabaseClient';
-import HomeScreen from './src/Screens/HomeScreen';
+import HomeScreen from './src/Screens/homeScreen';
 
 const Drawer = createDrawerNavigator();
 
