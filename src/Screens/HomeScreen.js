@@ -3,14 +3,11 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput, Alert} from
 import {Picker} from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
 import Timers from '../Components/Timers';
-import SettingsScreen from './settingsScreen';
-import { Iconify } from 'react-native-iconify';
 import { supabase } from '../api/supabaseClient'; 
 import MenuButton from '../Components/MenuButton';
 
 export default function HomeScreen({ route }) {
     const { session } = route.params;
-    const [settingsToggle, setSettingsToggle] = useState(false);
     const [labels, setLabels] = useState([]);
     const [selectedLabel, setSelectedLabel] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -44,7 +41,6 @@ export default function HomeScreen({ route }) {
                 if (!mounted) {
                   return;
                 }
-                console.log('Change received!', payload);
                 if (payload.eventType === 'DELETE') {
                   // Check if the deleted label's ID is mapped to the current user's ID
                   if (labelIdToUserIdMap[payload.old.id] === session.user.id) {
@@ -93,9 +89,6 @@ export default function HomeScreen({ route }) {
         }
     }
 
-    const handleToggleSettings = () => {
-        setSettingsToggle(!settingsToggle);
-    };
 
     const formatTime = (timeInSeconds, omitHours = false) => {
         const hours = Math.floor(timeInSeconds / 3600);
@@ -279,14 +272,6 @@ export default function HomeScreen({ route }) {
             labelsLength ={labels.length} 
             />
 
-
-            <TouchableOpacity onPress={handleToggleSettings} style={styles.settingsButton}>
-                <Iconify icon="material-symbols:settings-heart-outline" size={35} color="#000" />
-            </TouchableOpacity>
-
-            {settingsToggle && (
-                <SettingsScreen session={session} onToggleSettings={handleToggleSettings} />
-            )}
         </View>
     );
 }
@@ -347,13 +332,6 @@ const styles = StyleSheet.create({
         color: 'black',
         fontWeight:'bold',
         fontSize:15,
-    },
-    settingsButton: {
-        position: 'absolute',
-        top: 4,
-        right: 2,
-        padding: 7,
-        borderRadius: 5,
     },
     modalContent: {
         flex: 1,

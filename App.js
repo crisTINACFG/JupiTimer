@@ -6,6 +6,8 @@ import { supabase } from './src/api/supabaseClient';
 import Auth from './src/api/Auth';
 import { logout } from './src/api/supabaseClient';
 import HomeScreen from './src/Screens/homeScreen';
+import SettingsScreen from './src/Screens/SettingsScreen';
+
 
 const Drawer = createDrawerNavigator();
 
@@ -44,6 +46,7 @@ export default function App() {
         }}
           >
           <Drawer.Screen name="Home" component={HomeScreen} initialParams={{ session: session }} />
+          <Drawer.Screen name="Settings" component={SettingsScreen} initialParams={{ session: session }} />
         </Drawer.Navigator>
       </NavigationContainer>
     );

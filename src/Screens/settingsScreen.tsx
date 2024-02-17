@@ -5,8 +5,10 @@ import { Iconify } from 'react-native-iconify';
 import { supabase } from '../api/supabaseClient';
 import { Button, Input } from 'react-native-elements';
 import Avatar from '../Components/Avatar';
+import MenuButton from '../Components/MenuButton';
 
-export default function settingsScreen({ session, onToggleSettings }) {
+export default function SettingsScreen({ route }) {
+  const { session } = route.params;
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
   // Allow avatarUrl to be either string or null
@@ -94,6 +96,10 @@ export default function settingsScreen({ session, onToggleSettings }) {
     return (
     <View style={styles.container}>
 
+      <View style={styles.menu}>
+                <MenuButton/>
+            </View>
+
       <Button
         title="Delete Profile Picture"
         onPress={deleteProfilePicture}
@@ -124,11 +130,6 @@ export default function settingsScreen({ session, onToggleSettings }) {
         <Input label="Email" value={session?.user?.email} disabled />
       </View>
  
-      {/* Exit button */}
-      <TouchableOpacity onPress={onToggleSettings} style={styles.settingsButton}>
-        <Iconify icon="material-symbols:settings-heart-outline" size={35} color="#000" />
-      </TouchableOpacity>
-
       {/* Logout button */}
       <TouchableOpacity onPress={logout} style={styles.logoutButton}>
           <Text>Logout</Text>
@@ -148,6 +149,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    menu:{
+      position:'absolute',
+      left: 0,
+      top: 15,
+  },
     settingsButton: {
         position: 'absolute', 
         top: 4,            
@@ -171,8 +177,7 @@ const styles = StyleSheet.create({
     },
     avatar: {
       position: 'absolute', 
-      top:10,
-      left:10,
+      top:40,
       borderRadius: 100,
     },
 });
