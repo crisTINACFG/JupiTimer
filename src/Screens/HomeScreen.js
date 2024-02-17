@@ -19,8 +19,6 @@ export default function HomeScreen({ route }) {
     const [elapsedTime, setElapsedTime] = useState(0);
 
     const [showEndPromps, setShowEndPromps] = useState(false);
-
-    const [predictedProductivity, setPredictedProductivity] = useState(0);
     const [actualProductivity, setActualProductivity] = useState(0);
     const [efficiency, setEfficiency] = useState(0);
 
@@ -240,11 +238,11 @@ export default function HomeScreen({ route }) {
                         setShowEndPromps(false)];
                     }}>
                    <View style={styles.endView} onStartShouldSetResponder={() => true}>
-                        <Text>Time elapsed: {formatTime(elapsedTime)}</Text>
-                        <Text>Distractions: {distractionCount}</Text>
-                        <Text>Productivity: {actualProductivity}%</Text>
+                        <Text style={styles.endText}>Time elapsed: {formatTime(elapsedTime)}</Text>
+                        <Text style={styles.endText}>Distractions: {distractionCount}</Text>
+                        <Text style={styles.endText}>Productivity: {actualProductivity}%</Text>
                         {efficiency !== 0 && (
-                        <Text>
+                        <Text style={styles.endText}>
                             You were {efficiency > 0 ? `${efficiency}% more` : `${Math.abs(efficiency)}% less`} efficient than predicted
                         </Text>
                         )}
@@ -289,9 +287,9 @@ const styles = StyleSheet.create({
         top: 15,
     },
     endView:{
-        backgroundColor: 'white',
+        backgroundColor: '#7e65e5',
         padding:15,
-        paddingHorizontal:50,
+        paddingHorizontal:35,
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: {
@@ -304,6 +302,10 @@ const styles = StyleSheet.create({
         position: 'absolute', 
         borderRadius: 10,
     },
+    endText:{
+        fontSize:16,
+        color:'white',
+    },
     distractionPromt:{
         flex:1,
     },
@@ -312,7 +314,7 @@ const styles = StyleSheet.create({
         height: 50,
         justifyContent: 'center', 
         alignItems: 'center',
-        backgroundColor:'#F9B9CF',
+        backgroundColor:'#30137c',
         position:'absolute',
         right: 100,
         bottom:49,
@@ -329,7 +331,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     distractionText: {
-        color: 'black',
+        color: 'white',
         fontWeight:'bold',
         fontSize:15,
     },

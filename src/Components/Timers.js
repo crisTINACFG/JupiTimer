@@ -147,7 +147,7 @@ const Timers = ({
             if (isRunning) { //if true then show elapsed time and write session to database.
                 const elapsedTime = calculateElapsedTime();
                 if (elapsedTime > 0) {
-                    setElapsedTime(elapsedTime);
+                    setElapsedTime(elapsedTime); 
                     setSessionEnd(true); 
                 }else{
                     Alert.alert('Time elapsed too short, session not saved')
@@ -275,10 +275,10 @@ const Timers = ({
                             onValueChange={setActualProductivity}
                             minimumTrackTintColor="#886ef1"
                             maximumTrackTintColor="#d3d3d3"
-                            thumbTintColor="#5310B4"
+                            thumbTintColor="#30137c"
                         />
                         <TouchableOpacity
-                            style={styles.button}
+                            style={styles.buttonConfirm}
                             onPress={handleConfirmProductivity} 
                         >
                             <Text style={styles.buttonText}>Confirm</Text>
@@ -325,15 +325,42 @@ const styles = StyleSheet.create({
     button: {  //segmented control buttons
         padding: 13,
         marginHorizontal: 10,
-        backgroundColor: '#DDD',
-        borderRadius: 5,
+        backgroundColor: '#7e65e5',
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: 'white',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    buttonConfirm: {  //segmented control buttons
+        padding: 13,
+        marginHorizontal: 10,
+        backgroundColor: '#30137c',
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: 'white',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     buttonActive: {
-        backgroundColor: '#AAA',
+        backgroundColor: '#30137c',
     },
     buttonText: {
-        color: 'black',
+        color: 'white',
         fontSize: 18,
+        fontWeight:'bold',
     },
     timerContainer: {
         alignItems: 'center',
@@ -358,7 +385,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         paddingVertical: 10,
         paddingHorizontal: 20,
-        backgroundColor: '#F9B9CF',
+        backgroundColor: '#7e65e5',
         borderRadius: 10,
         borderWidth: 1,
         borderColor: 'white',
@@ -373,7 +400,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     startButtonText: {
-        color: 'black',
+        color: 'white',
         fontSize: 18,
         fontWeight: 'bold',
         textAlign: 'center',

@@ -11,7 +11,7 @@ const MenuButton = () => {
       onPress={() => navigation.toggleDrawer()}
       style={{ marginLeft: 10, }}
     >
-      <Iconify icon="streamline:planet-solid" size={24} color="#000" />
+      <Iconify icon="streamline:planet-solid" size={24} color="#30137c" />
     </TouchableOpacity>
   );
 };

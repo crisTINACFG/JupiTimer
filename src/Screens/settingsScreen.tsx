@@ -97,14 +97,16 @@ export default function SettingsScreen({ route }) {
     <View style={styles.container}>
 
       <View style={styles.menu}>
-                <MenuButton/>
-            </View>
+        <MenuButton/>
+      </View>
 
-      <Button
-        title="Delete Profile Picture"
-        onPress={deleteProfilePicture}
-        disabled={loading}
-      />
+
+        <TouchableOpacity
+          onPress={deleteProfilePicture}
+          disabled={loading}
+          style={styles.deleteprofile}>
+            <Text style={styles.logoutText}>Delete Profile Picture</Text>
+        </TouchableOpacity>
 
       <View style ={styles.avatar}>
         <Avatar
@@ -132,7 +134,7 @@ export default function SettingsScreen({ route }) {
  
       {/* Logout button */}
       <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-          <Text>Logout</Text>
+          <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
@@ -154,6 +156,11 @@ const styles = StyleSheet.create({
       left: 0,
       top: 15,
   },
+  deleteprofile:{
+    padding:10,
+    borderRadius:5,
+    backgroundColor:'#7e65e5',
+  },
     settingsButton: {
         position: 'absolute', 
         top: 4,            
@@ -163,9 +170,12 @@ const styles = StyleSheet.create({
       },
     logoutButton: {
         padding: 10,
-        backgroundColor: 'pink',
+        backgroundColor: '#30137c',
         borderRadius: 5,
         color: 'black',
+    },
+    logoutText:{
+      color:'white',
     },
     verticallySpaced: {
       paddingTop: 4,
