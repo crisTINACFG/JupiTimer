@@ -144,6 +144,9 @@ export default function HomeScreen({ route }) {
             </Picker>
             </View>
 
+            <TouchableOpacity style={styles.distraction}>
+            </TouchableOpacity>
+
             <Modal
                 visible={showModal}
                 transparent={true}
@@ -209,6 +212,24 @@ const styles = StyleSheet.create({
         position:'absolute',
         left: 0,
         top: 15,
+    },
+    distraction: {
+        padding: 25,
+        backgroundColor:'darkred',
+        position:'absolute',
+        right:25,
+        bottom:173,
+        borderRadius:40,
+        borderWidth: 1,
+        borderColor: 'white',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     settingsButton: {
         position: 'absolute',

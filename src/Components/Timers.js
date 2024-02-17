@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { supabase } from '../api/supabaseClient';
+import { BoltOutlined } from '@mui/icons-material';
 
 const Timers = ({ session, selectedLabel, labelsLength }) => {
     const [isRunning, setIsRunning] = useState(false);
@@ -144,7 +145,9 @@ const Timers = ({ session, selectedLabel, labelsLength }) => {
                 if (elapsedTime > 0) {
                     setElapsedTime(elapsedTime);
                     setSessionEnd(true); 
-                };
+                }else{
+                    Alert.alert('Time elapsed too short, session not saved')
+                }
             } else {
                 // Start the timer by setting the startTime to the current time
                 setStartTime(new Date()); // Reset the startTime when starting the timer
@@ -337,15 +340,24 @@ const styles = StyleSheet.create({
         position: 'absolute',
         paddingVertical: 10,
         paddingHorizontal: 20,
-        backgroundColor: 'blue',
+        backgroundColor: 'pink',
         borderRadius: 10,
         borderWidth: 1,
         borderColor: 'white',
         bottom:50,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     startButtonText: {
-        color: 'white',
+        color: 'black',
         fontSize: 18,
+        fontWeight: 'bold',
         textAlign: 'center',
     },
     centeredView: {
