@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput, Alert} from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput, Input, Alert} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
 import Timers from '../Components/Timers';
@@ -23,7 +23,6 @@ export default function HomeScreen({ route }) {
     const [efficiency, setEfficiency] = useState(0);
 
     const [labelIdToUserIdMap, setLabelIdToUserIdMap] = useState({});
-
     const currentLabel = labels.find(label => label.id === selectedLabel);
 
     useEffect(() => {
@@ -87,7 +86,6 @@ export default function HomeScreen({ route }) {
         }
     }
 
-
     const formatTime = (timeInSeconds, omitHours = false) => {
         const hours = Math.floor(timeInSeconds / 3600);
         const minutes = Math.floor((timeInSeconds % 3600) / 60);
@@ -107,19 +105,25 @@ export default function HomeScreen({ route }) {
     };
 
     const addNewLabel = async () => {
+        if (!newLabelName.trim()) {
+            // If newLabelName is empty or just whitespace, display an alert and return early
+            Alert.alert("Label name is required", "Please enter a label name before adding.");
+            return;
+        }
+    
         try {
             if (!session?.user) throw new Error('No user on the session!');
-
+    
             const newLabel = {
                 user_id: session.user.id,
-                label_text: newLabelName,
+                label_text: newLabelName.trim(),
                 is_productive: isProductive
             };
-
+    
             let { error } = await supabase
                 .from('labels')
                 .insert([newLabel]);
-
+    
             if (error) {
                 throw error;
             } else {
@@ -131,6 +135,7 @@ export default function HomeScreen({ route }) {
             }
         } finally {
             setNewLabelName('');
+            setIsProductive(false);
             setShowModal(false);
         }
     };
@@ -138,7 +143,6 @@ export default function HomeScreen({ route }) {
     const handleDistractionCounter = () => {
         setDistractionCount(distractionCount + 1);
     };
-
 
     return (
         <View style={styles.container}>
@@ -202,7 +206,8 @@ export default function HomeScreen({ route }) {
                         onStartShouldSetResponder={() => true} // This prevents touch events from bubbling up to the parent TouchableOpacity
                     >
                         <TextInput
-                            placeholder="Enter Label Name:"
+                            label='Enter Label Name' //this is not working for some reason?
+                            placeholder="Label Name e.g. Mathematics"
                             value={newLabelName}
                             onChangeText={setNewLabelName}
                             style={styles.input}
@@ -211,16 +216,16 @@ export default function HomeScreen({ route }) {
                             <CheckBox
                                 value={isProductive}
                                 onValueChange={setIsProductive}
+                                tintColors={{ true: '#30137c', false: '#7e65e5' }}
                             />
                             <Text>Is Productive?</Text>
                         </View>
-                        <TouchableOpacity onPress={addNewLabel} style={styles.button}>
-                            <Text >Add Label</Text>
+                        <TouchableOpacity onPress={addNewLabel} style={styles.addLabelButton}>
+                            <Text style={styles.endText} >Add Label</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
             </Modal>
-
            
             <Modal
             visible={showEndPromps}
@@ -251,7 +256,6 @@ export default function HomeScreen({ route }) {
 
             </Modal>
             
-
             <Timers 
             elapsedTime={elapsedTime} 
             setElapsedTime={setElapsedTime}
@@ -303,7 +307,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     endText:{
-        fontSize:16,
+        fontSize:15,
         color:'white',
     },
     distractionPromt:{
@@ -360,6 +364,25 @@ const styles = StyleSheet.create({
         padding: 8,
         right:44,
         top: 72,
+        marginTop: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'white',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    addLabelButton:{
+        backgroundColor:'#7e65e5',
+        position:'absolute',
+        padding: 7,
+        right:44,
+        top: 75,
         marginTop: 10,
         borderRadius: 10,
         borderWidth: 1,
