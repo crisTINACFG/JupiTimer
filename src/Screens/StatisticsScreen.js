@@ -5,10 +5,32 @@ import MenuButton from "../Components/MenuButton";
 import { supabase } from '../api/supabaseClient';
 
 export default function StatisticsScreen ({ route }) {
-    const { session } = route.params;
+  const { session } = route.params;
   const [timelineData, setTimelineData] = useState([]);
+  const [currentDay, setCurrentDay] = useState(new Date()); 
 
-  // Function to fetch timeline data
+
+
+  const addDays = (date, days) => { //DAY SELECTOR
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  };
+  const goToNextDay = () => {
+    setCurrentDay(addDays(currentDay, 1));
+  };
+  const goToPreviousDay = () => {
+    setCurrentDay(addDays(currentDay, -1));
+  };
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+
   const fetchTimelineData = async () => {
     const { data, error } = await supabase
       .from('studysession')
@@ -21,6 +43,7 @@ export default function StatisticsScreen ({ route }) {
       return;
     }
 
+
     // Convert data for timeline display
     const formattedData = data.map(session => ({
       time: new Date(session.starttime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -30,6 +53,7 @@ export default function StatisticsScreen ({ route }) {
 
     return formattedData;
   };
+
 
   // Function to format the elapsed time
   const formatElapsedTime = (elapsedtime) => {
@@ -49,21 +73,18 @@ export default function StatisticsScreen ({ route }) {
     }
   };
 
-  // Function to fetch data and set timeline state
+
+  // fetch data and set timeline state
   const fetchData = async () => {
     const data = await fetchTimelineData();
     if (data) {
       setTimelineData(data);
     }
   };
-
-  // useEffect for fetching initial timeline data
-  useEffect(() => {
+  useEffect(() => { // useEffect for fetching initial timeline data
     fetchData();
-  }, [timelineData]); // Dependency array for fetching initial data
-
-  // useEffect for setting up Supabase real-time subscription
-  useEffect(() => {
+  }, [timelineData]); 
+  useEffect(() => {//Supabase real-time subscription
     const subscription = supabase
       .channel('studysession') // Confirm this is the correct channel name
       .on('*', payload => {console.log(payload), fetchData();})
@@ -74,7 +95,8 @@ export default function StatisticsScreen ({ route }) {
     };
   }, [session.user.id]); 
 
-  // Custom render functions for the Timeline component
+
+
   const renderDetail = (rowData, sectionID, rowID) => {
     return (
       <TouchableOpacity
@@ -84,34 +106,53 @@ export default function StatisticsScreen ({ route }) {
         <Text style={styles.title}>{rowData.title}</Text>
         <Text style={styles.description}>{rowData.description}</Text>
       </TouchableOpacity>
-    );
-  };
-
+    );};
+  
   const renderTime = (rowData, sectionID, rowID) => {
     return (
       <Text style={styles.time}>{rowData.time}</Text>
-    );
-  };
+    );};
+  
 
-    return(
-        <View style={styles.container}>
-            <View style={styles.menu}>
-                <MenuButton />
-            </View>
-            <Timeline
-                data={timelineData}
-                circleSize={20}
-                circleColor="#30137c"
-                lineColor="#30137c"
-                descriptionStyle={{ color: 'gray' }}
-                options={{
-                    style: { paddingTop: 5 }
-                }}
-                innerCircle={'dot'}
-                renderDetail={renderDetail}
-                renderTime={renderTime}
-            />
+    return( 
+      <View style={styles.container}>
+
+        <View style={styles.menu}>
+            <MenuButton />
         </View>
+
+        
+        <View style={styles.dateSelector}>
+            <TouchableOpacity onPress={goToPreviousDay}>
+                <Text style={styles.arrow}>{"<"}</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.dateText}>{formatDate(currentDay)}</Text>
+
+            <TouchableOpacity onPress={goToNextDay}>
+                <Text style={styles.arrow}>{">"}</Text>
+            </TouchableOpacity>
+        </View>
+
+
+        <View style={styles.widget}>
+          <Timeline
+              data={timelineData}
+              circleSize={20}
+              circleColor="#30137c"
+              lineColor="#30137c"
+              descriptionStyle={{ color: 'gray' }}
+              options={{
+                  style: { paddingTop: 5 }
+              }}
+              innerCircle={'dot'}
+              renderDetail={renderDetail}
+              renderTime={renderTime}
+          />
+        </View>
+
+
+      </View>
     );
 }
 
@@ -121,6 +162,14 @@ const styles = StyleSheet.create({
       left: 0,
       top: 15,
       zIndex: 1,
+    },
+    widget: {
+      marginTop:4,
+      padding:13,
+      borderRadius:20,
+      backgroundColor: '#f0ecff',
+      width: '100%',
+      height:300,
     },
     detailContainer: {
         marginBottom: 20, 
@@ -134,7 +183,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 1, height: 3 },
         elevation: 3,
         borderWidth: 1,
-        borderColor: 'black', // Remove after debugging
+        borderColor: 'black',
       },
       title: {
         fontSize: 16,
@@ -156,5 +205,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         backgroundColor: 'white',
         width: '100%',
+      },
+      dateSelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf:'center',
+        marginTop: 10,
+      },
+      arrow: {
+        fontSize: 24,
+        marginHorizontal: 10,
+      },
+      dateText: {
+        fontSize: 18,
       },
   });
