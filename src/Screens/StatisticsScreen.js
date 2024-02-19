@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Timeline from 'react-native-timeline-flatlist';
 import MenuButton from "../Components/MenuButton";
 import { supabase } from '../api/supabaseClient';
@@ -8,7 +8,6 @@ export default function StatisticsScreen ({ route }) {
   const { session } = route.params;
   const [timelineData, setTimelineData] = useState([]);
   const [currentDay, setCurrentDay] = useState(new Date()); 
-
 
 
   const addDays = (date, days) => { //DAY SELECTOR
@@ -32,28 +31,32 @@ export default function StatisticsScreen ({ route }) {
 
 
   const fetchTimelineData = async () => {
+    const startOfDay = new Date(currentDay.setHours(0,0,0,0)).toISOString();
+    const endOfDay = new Date(currentDay.setHours(23,59,59,999)).toISOString();
+  
     const { data, error } = await supabase
       .from('studysession')
       .select('*')
       .eq('id', session?.user.id)
+      .gte('starttime', startOfDay) // sessions starting on or after the start of the current day
+      .lte('starttime', endOfDay) // sessions starting on or before the end of the current day
       .order('starttime', { ascending: true });
-
+  
     if (error) {
       console.error('Error fetching data:', error);
       return;
     }
-
-
+  
     // Convert data for timeline display
     const formattedData = data.map(session => ({
+      sessionId: session.sessionid,
       time: new Date(session.starttime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       title: session.label_text,
       description: `Elapsed Time: ${formatElapsedTime(session.elapsedtime)}`,
     }));
-
+  
     return formattedData;
   };
-
 
   // Function to format the elapsed time
   const formatElapsedTime = (elapsedtime) => {
@@ -72,6 +75,12 @@ export default function StatisticsScreen ({ route }) {
       return 'No elapsed time';
     }
   };
+  const isToday = (date) => { //checking if the day selected is today
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  };
 
 
   // fetch data and set timeline state
@@ -83,7 +92,7 @@ export default function StatisticsScreen ({ route }) {
   };
   useEffect(() => { // useEffect for fetching initial timeline data
     fetchData();
-  }, [timelineData]); 
+  }, [timelineData, currentDay]); 
   useEffect(() => {//Supabase real-time subscription
     const subscription = supabase
       .channel('studysession') // Confirm this is the correct channel name
@@ -95,18 +104,46 @@ export default function StatisticsScreen ({ route }) {
     };
   }, [session.user.id]); 
 
-
+  const deleteSession = async (sessionid) => {
+    const { data, error } = await supabase
+      .from('studysession')
+      .delete()
+      .match({ sessionid: sessionid });
+  
+    if (error) {
+      console.error('Error deleting session:', error);
+    } else {
+      console.log('Session deleted:', data);
+      fetchData(); // Refresh the timeline data after deletion
+    }
+  };
 
   const renderDetail = (rowData, sectionID, rowID) => {
     return (
       <TouchableOpacity
         style={styles.detailContainer}
-        onPress={() => console.log(`Pressed: ${rowData.title}`)}
+        onPress={() => {
+          console.log(rowData); // Add this line to debug
+          Alert.alert(
+            "Delete Session",
+            `Are you sure you want to delete the session "${rowData.title}"?`,
+            [
+              {
+                text: "Cancel",
+                style: "cancel"
+              },
+              { text: "Delete", onPress: () => deleteSession(rowData.sessionId) }
+            ],
+            { cancelable: false }
+          );
+        }}
       >
         <Text style={styles.title}>{rowData.title}</Text>
         <Text style={styles.description}>{rowData.description}</Text>
       </TouchableOpacity>
-    );};
+    );
+  };
+  
   
   const renderTime = (rowData, sectionID, rowID) => {
     return (
@@ -129,9 +166,12 @@ export default function StatisticsScreen ({ route }) {
 
             <Text style={styles.dateText}>{formatDate(currentDay)}</Text>
 
-            <TouchableOpacity onPress={goToNextDay}>
-                <Text style={styles.arrow}>{">"}</Text>
-            </TouchableOpacity>
+            {/* Conditionally render the next day button */}
+            {!isToday(currentDay) && (
+              <TouchableOpacity onPress={goToNextDay}>
+                  <Text style={styles.arrow}>{">"}</Text>
+              </TouchableOpacity>
+            )}
         </View>
 
 
@@ -164,8 +204,9 @@ const styles = StyleSheet.create({
       zIndex: 1,
     },
     widget: {
-      marginTop:4,
-      padding:13,
+      marginTop:55,
+      padding:10,
+      paddingLeft:1,
       borderRadius:20,
       backgroundColor: '#f0ecff',
       width: '100%',
@@ -207,10 +248,11 @@ const styles = StyleSheet.create({
         width: '100%',
       },
       dateSelector: {
-        flexDirection: 'row',
+        flexDirection:'row',
         alignItems: 'center',
         alignSelf:'center',
-        marginTop: 10,
+        position:'absolute',
+        top:80,
       },
       arrow: {
         fontSize: 24,
