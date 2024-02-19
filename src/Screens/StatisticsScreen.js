@@ -113,7 +113,6 @@ export default function StatisticsScreen ({ route }) {
     if (error) {
       console.error('Error deleting session:', error);
     } else {
-      console.log('Session deleted:', data);
       fetchData(); // Refresh the timeline data after deletion
     }
   };
@@ -123,7 +122,6 @@ export default function StatisticsScreen ({ route }) {
       <TouchableOpacity
         style={styles.detailContainer}
         onPress={() => {
-          console.log(rowData); // Add this line to debug
           Alert.alert(
             "Delete Session",
             `Are you sure you want to delete the session "${rowData.title}"?`,
@@ -250,7 +248,7 @@ const styles = StyleSheet.create({
       dateSelector: {
         flexDirection:'row',
         alignItems: 'center',
-        alignSelf:'center',
+        marginLeft:95,
         position:'absolute',
         top:80,
       },
