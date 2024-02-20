@@ -2,7 +2,6 @@ import MenuButton from "../Components/MenuButton";
 import { View, StyleSheet } from 'react-native';
 
 export default function Leaderboard () {
-
     return(
         <View style={styles.container}>
             <View style={styles.menu}>
