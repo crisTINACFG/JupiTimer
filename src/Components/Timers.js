@@ -166,7 +166,7 @@ const Timers = ({
 
     const handleConfirmProductivity = () => {
 
-        efficiency = actualProductivity - (100 - 2*  distractionCount) //think about a non-linear model instead
+        efficiency = actualProductivity - (100 - 4*  distractionCount) //think about a non-linear model instead
         setEfficiency(efficiency)
         setShowEndPromps(true);
         writeToDatabase(startTime, new Date(), elapsedTime, label, actualProductivity, distractionCount, efficiency);

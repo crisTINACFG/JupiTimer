@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Alert, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Timeline from 'react-native-timeline-flatlist';
+import Swiper from 'react-native-swiper';
+
 import MenuButton from "../Components/MenuButton";
 import { supabase } from '../api/supabaseClient';
 
@@ -174,20 +176,26 @@ export default function StatisticsScreen ({ route }) {
 
 
         <View style={styles.widget}>
+        {timelineData.length === 0 ? (
+          <View style={styles.noSessionsView}>
+            <Text style={styles.noSessionsText}>No sessions today</Text>
+          </View>
+        ) : (
           <Timeline
-              data={timelineData}
-              circleSize={20}
-              circleColor="#30137c"
-              lineColor="#30137c"
-              descriptionStyle={{ color: 'gray' }}
-              options={{
-                  style: { paddingTop: 5 }
-              }}
-              innerCircle={'dot'}
-              renderDetail={renderDetail}
-              renderTime={renderTime}
+            data={timelineData}
+            circleSize={20}
+            circleColor="#30137c"
+            lineColor="#30137c"
+            descriptionStyle={{ color: 'gray' }}
+            options={{
+                style: { paddingTop: 5 }
+            }}
+            innerCircle={'dot'}
+            renderDetail={renderDetail}
+            renderTime={renderTime}
           />
-        </View>
+        )}
+      </View>
 
 
       </View>
@@ -200,6 +208,10 @@ const styles = StyleSheet.create({
       left: 0,
       top: 15,
       zIndex: 1,
+    },
+    noSessionsView:{
+      marginLeft:10,
+      fontWeight:'bold',
     },
     widget: {
       marginTop:55,
