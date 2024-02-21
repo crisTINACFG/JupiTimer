@@ -6,7 +6,6 @@ import { supabase } from './src/api/supabaseClient';
 import Auth from './src/api/Auth';
 import { logout } from './src/api/supabaseClient';
 
-import FriendScreen from './src/Screens/FriendScreen';
 import HomeScreen from './src/Screens/HomeScreen';
 import Leaderboard from './src/Screens/LeaderboardScreen';
 import SettingsScreen from './src/Screens/SettingsScreen';
@@ -52,7 +51,6 @@ export default function App() {
           <Drawer.Screen name="Home" component={HomeScreen} initialParams={{ session: session }} />
           <Drawer.Screen name="Statistics" component={StatisticsScreen} initialParams={{ session: session }} />
           <Drawer.Screen name="Leaderboard" component={Leaderboard} initialParams={{ session: session }} />
-          <Drawer.Screen name="Friends" component={FriendScreen} initialParams={{ session: session }} />
           <Drawer.Screen name="Settings" component={SettingsScreen} initialParams={{ session: session }} />
 
         </Drawer.Navigator>
