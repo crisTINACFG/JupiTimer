@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { logout } from '../api/supabaseClient';
-import { Iconify } from 'react-native-iconify';
 import { supabase } from '../api/supabaseClient';
-import { Button, Input } from 'react-native-elements';
+import { Input } from 'react-native-elements';
 import Avatar from '../Components/Avatar';
 import MenuButton from '../Components/MenuButton';
 
@@ -11,12 +10,12 @@ export default function SettingsScreen({ route }) {
   const { session } = route.params;
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
-  // Allow avatarUrl to be either string or null
+  //allow avatarurl to be either string or null
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  
 
   useEffect(() => {
+    //if a user is logged in, call getProfile
     if (session) getProfile();
   }, [session]);
 
@@ -25,16 +24,16 @@ export default function SettingsScreen({ route }) {
       setLoading(true);
       if (!session?.user) throw new Error('No user on the session!');
 
-      const { data, error, status } = await supabase
+      const { data, error} = await supabase //fetch the username and pfp where id==currently user id
         .from('profiles')
         .select(`username, avatar_url`)
         .eq('id', session?.user.id)
         .single();
-      if (error && status !== 406) {
+      if (error) {
         throw error;
       }
 
-      if (data) {
+      if (data) { //if successfully fetches, set the data to the state variables
         setUsername(data.username);
         setAvatarUrl(data.avatar_url);
       }
@@ -58,14 +57,15 @@ export default function SettingsScreen({ route }) {
       setLoading(true);
       if (!session?.user) throw new Error('No user on the session!');
 
-      const updates = {
+      const updates = { //i dont need to do this but it makes it easier to visualise
         id: session?.user.id,
         username,
         avatar_url,
         updated_at: new Date(),
       };
 
-      const { error } = await supabase.from('profiles').upsert(updates);
+      const { error } = await supabase.from('profiles').upsert(updates); //upset is a mixture between update and insert
+      //so if there was no pfp or avatar, it creates new entry but if already exists then it updates existing entry
 
       if (error) {
         throw error;
@@ -83,8 +83,9 @@ export default function SettingsScreen({ route }) {
     try {
       setLoading(true);
       setAvatarUrl(null);
-      await updateProfile({ username, avatar_url: null });
-    } catch (error) {
+      await updateProfile({ username, avatar_url: null }); //effectively delelets pfp by setting it to null but does not delete whole entry
+    } 
+      catch (error) {
       if (error instanceof Error) {
         Alert.alert(error.message);
       }
@@ -96,11 +97,12 @@ export default function SettingsScreen({ route }) {
     return (
     <View style={styles.container}>
 
+      {/* Menu button */}
       <View style={styles.menu}>
         <MenuButton/>
       </View>
 
-
+        {/* Delete profile picture button */}
         <TouchableOpacity
           onPress={deleteProfilePicture}
           disabled={loading}
@@ -108,6 +110,7 @@ export default function SettingsScreen({ route }) {
             <Text style={styles.logoutText}>Delete Profile Picture</Text>
         </TouchableOpacity>
 
+      {/* Profile picture */}
       <View style ={styles.avatar}>
         <Avatar
           key={avatarUrl || 'default-key'}
@@ -119,17 +122,22 @@ export default function SettingsScreen({ route }) {
           }}
         />
      </View>
-      
+
+      {/* Username interactable */}
       <View style={styles.verticallySpaced}>
         <Input label="Username" 
         value={username || ''} 
         onChangeText={(text) => setUsername(text)} 
-        onSubmitEditing={() => updateProfile({ username, avatar_url: avatarUrl })}
+        onSubmitEditing={() => updateProfile({ username, avatar_url: avatarUrl })} //on enter key update profile
         />
       </View>
 
+      {/* Email display */}
       <View style={styles.verticallySpaced}>
-        <Input label="Email" value={session?.user?.email} disabled />
+        <Input label="Email" 
+        value={session?.user?.email} 
+        //disabled so user cant change email (i'd require a smtp)
+        disabled /> 
       </View>
  
       {/* Logout button */}
@@ -140,7 +148,7 @@ export default function SettingsScreen({ route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ //my styling
     container: {
         position: 'absolute',
         top: 0,
