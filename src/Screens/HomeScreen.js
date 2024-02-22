@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput, Input, Alert} from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput, Alert} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
 import Timers from '../Components/Timers';
@@ -7,7 +7,8 @@ import { supabase } from '../api/supabaseClient';
 import MenuButton from '../Components/MenuButton';
 
 export default function HomeScreen({ route }) {
-    const { session } = route.params;
+    const { session } = route.params; //parameters for authentication or user id
+
     const [labels, setLabels] = useState([]);
     const [selectedLabel, setSelectedLabel] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -17,11 +18,9 @@ export default function HomeScreen({ route }) {
     const [distractionCount, setDistractionCount] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
-
     const [showEndPromps, setShowEndPromps] = useState(false);
     const [actualProductivity, setActualProductivity] = useState(0);
     const [efficiency, setEfficiency] = useState(0);
-
     const [labelIdToUserIdMap, setLabelIdToUserIdMap] = useState({});
     const currentLabel = labels.find(label => label.id === selectedLabel);
 
@@ -39,12 +38,12 @@ export default function HomeScreen({ route }) {
                   return;
                 }
                 if (payload.eventType === 'DELETE') {
-                  // Check if the deleted label's ID is mapped to the current user's ID
+                  //checking if the deleted label id is mapped to the current user id
                   if (labelIdToUserIdMap[payload.old.id] === session.user.id) {
                       fetchLabels();
                   }
                 } else {
-                  // For non-DELETE events, check if the user ID matches the current session's user ID
+                  //for non DELETE events check if the user id matches the current session user id
                   const relevantChange = payload.new?.user_id === session.user.id || payload.old?.user_id === session.user.id;
                   if (relevantChange) {
                       fetchLabels();
@@ -53,7 +52,7 @@ export default function HomeScreen({ route }) {
               })
           .subscribe();
       
-        fetchLabels(); // Initial fetch
+        fetchLabels(); //initial fetch
       
         return () => {
           mounted = false;
@@ -72,7 +71,7 @@ export default function HomeScreen({ route }) {
           }
         else {
             setLabels(data);
-            // Update the label ID to user ID mapping in order to check for real_time deletes
+            //update the label id to user id mapping in order to check for real time deletes
             const newMap = data.reduce((map, label) => {
                 map[label.id] = label.user_id;
                 return map;
@@ -96,19 +95,19 @@ export default function HomeScreen({ route }) {
         const paddedSeconds = seconds.toString().padStart(2, '0');
     
         if (omitHours && hours === 0) {
-            // Format the time as "MM:SS"
+            //"MM:SS"
             return `${paddedMinutes}:${paddedSeconds}`;
         } else {
-            // Format the time as "HH:MM:SS"
+            //"HH:MM:SS"
             return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
         }
     };
 
     const addNewLabel = async () => {
         if (!newLabelName.trim()) {
-            // If newLabelName is empty or just whitespace, display an alert and return early
+            //if newLabelName is empty or whitespace, display an alert and return 
             Alert.alert("Label name is required", "Please enter a label name before adding.");
-            return;
+            return; 
         }
     
         try {
@@ -127,7 +126,7 @@ export default function HomeScreen({ route }) {
             if (error) {
                 throw error;
             } else {
-                await fetchLabels(); // Ensures labels are fetched before continuing
+                await fetchLabels(); //ensures labels fetched before continuing
             }
         } catch (error) {
             if (error instanceof Error) {
@@ -136,22 +135,24 @@ export default function HomeScreen({ route }) {
         } finally {
             setNewLabelName('');
             setIsProductive(false);
-            setShowModal(false);
+            setShowModal(false); //resets values to their original states
         }
     };
 
-    const handleDistractionCounter = () => {
+    const handleDistractionCounter = () => { 
         setDistractionCount(distractionCount + 1);
+        //this is a little bit redundant but it makes my return cleaner
     };
 
     return (
         <View style={styles.container}>
+            {/*Menu Button*/}
             <View style={styles.menu}>
                 <MenuButton/>
             </View>
 
-            { 
-            !isRunning && ( //only render picker if timer is not running
+            { //only render picker if timer is not running
+            !isRunning && ( 
                 <View style = {styles.picker}>
                     <Picker
                         selectedValue={selectedLabel}
@@ -185,7 +186,7 @@ export default function HomeScreen({ route }) {
                     </TouchableOpacity>
             )}
 
-            <Modal
+            <Modal //modal for creating new label
                 visible={showModal}
                 transparent={true}
                 onRequestClose={() => {
@@ -203,7 +204,7 @@ export default function HomeScreen({ route }) {
                     }}>
                     <View
                         style={styles.modalView}
-                        onStartShouldSetResponder={() => true} // This prevents touch events from bubbling up to the parent TouchableOpacity
+                        onStartShouldSetResponder={() => true} 
                     >
                         <TextInput
                             label='Enter Label Name' //this is not working for some reason?
@@ -227,7 +228,7 @@ export default function HomeScreen({ route }) {
                 </TouchableOpacity>
             </Modal>
            
-            <Modal
+            <Modal //modal for the end statistics 
             visible={showEndPromps}
             transparent={true}
             onRequestClose={() => {
@@ -256,7 +257,7 @@ export default function HomeScreen({ route }) {
 
             </Modal>
             
-            <Timers 
+            <Timers //passes a bunch of props down to child component (Timers.js)
             elapsedTime={elapsedTime} 
             setElapsedTime={setElapsedTime}
             showEndPromps={showEndPromps}

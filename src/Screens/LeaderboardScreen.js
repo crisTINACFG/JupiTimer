@@ -3,50 +3,65 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { supabase } from '../api/supabaseClient';
 import MenuButton from "../Components/MenuButton";
 
-export default function Leaderboard() {
+export default function Leaderboard( { route }) {
+    const { session } = route.params;
     const [leaderboardData, setLeaderboardData] = useState([]);
 
     useEffect(() => {
         fetchLeaderboardData();
     }, []);
 
+    useEffect(() => {
+        //supabase real-time subscription
+        //this listens to the table studysession and provides me with the changed data in payload
+        //on payload receive, fetch the data again to get the new table
+        const subscription = supabase
+          .channel('studysession') 
+          .on('*', payload => { fetchLeaderboardData();})
+          .subscribe();
+    
+        return () => {
+          subscription.unsubscribe(); //unsubscriping to prevent memory leaks
+        };
+      }, [session.user.id]); 
+
     const fetchLeaderboardData = async () => {
         try {
-            // Fetching elapsed time data
+            //fetching elapsed time data
             let { data: sessionData, error: sessionError } = await supabase
                 .from('studysession')
                 .select('id, elapsedtime');
             if (sessionError) throw sessionError;
 
-            // Fetching usernames
+            //fetching usernames
             let { data: userData, error: userError } = await supabase
                 .from('profiles')
                 .select('id, username');
             if (userError) throw userError;
 
-            // Creating a map for userId to username
+            //creating a map for userId to username
             const userIdToUsernameMap = userData.reduce((acc, user) => {
                 acc[user.id] = user.username;
                 return acc;
             }, {});
 
-            // Aggregating session data by userId
+            //aggregating session data by userId
             const aggregatedData = sessionData.reduce((acc, session) => {
                 const { id, elapsedtime } = session;
                 if (!acc[id]) {
                     acc[id] = { totalelapsedtime: 0 };
                 }
-                acc[id].totalelapsedtime += parseToSeconds(elapsedtime); // Assuming parseToSeconds is defined
+                acc[id].totalelapsedtime += parseToSeconds(elapsedtime); 
                 return acc;
             }, {});
 
-            // Creating leaderboard array with usernames
+            //creating leaderboard array with usernames
             const leaderboardArray = Object.keys(aggregatedData).map((userId) => {
                 const totalSeconds = aggregatedData[userId].totalelapsedtime;
-                const formattedTime = formatelapsedtime(totalSeconds); // Assuming formatelapsedtime is defined
+                const formattedTime = formatelapsedtime(totalSeconds);
                 return {
                     id: userId,
-                    username: userIdToUsernameMap[userId] || 'Unknown', // Fallback to 'Unknown' if no username found
+                    username: userIdToUsernameMap[userId] || 'Unknown', //'Unknown' if no username found
                     formattedTime,
                 };
             }).sort((a, b) => b.formattedTime.localeCompare(a.formattedTime));
@@ -58,13 +73,13 @@ export default function Leaderboard() {
     };
 
     
-    // Function to parse "HH:MM:SS" string to total seconds
+    //function to parse "HH:MM:SS" string to total seconds
     function parseToSeconds(timeString) {
         const [hours, minutes, seconds] = timeString.split(':').map(Number);
         return hours * 3600 + minutes * 60 + seconds;
     }
     
-    // Function to convert elapsed time in seconds to dd:hh:mm:ss format
+    //function to convert elapsed time in seconds to dd:hh:mm:ss format
     function formatelapsedtime(totalSeconds) {
         const days = Math.floor(totalSeconds / (3600 * 24));
         const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);

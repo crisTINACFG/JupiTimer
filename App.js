@@ -4,7 +4,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { supabase } from './src/api/supabaseClient';
 import Auth from './src/api/Auth';
-import { logout } from './src/api/supabaseClient';
 
 import HomeScreen from './src/Screens/HomeScreen';
 import Leaderboard from './src/Screens/LeaderboardScreen';
@@ -15,10 +14,6 @@ const Drawer = createDrawerNavigator();
 
 export default function App() {
   const [session, setSession] = useState(null);
-
-  useEffect(() => {
-    logout();
-  }, []);
   
   useEffect(() => {
     //when the component mounts, this fetches the current session,
@@ -50,7 +45,7 @@ export default function App() {
           >
           <Drawer.Screen name="Home" component={HomeScreen} initialParams={{ session: session }} />
           <Drawer.Screen name="Statistics" component={StatisticsScreen} initialParams={{ session: session }} />
-          <Drawer.Screen name="Leaderboard" component={Leaderboard}/>
+          <Drawer.Screen name="Leaderboard" component={Leaderboard} initialParams={{ session: session }} />
           <Drawer.Screen name="Settings" component={SettingsScreen} initialParams={{ session: session }} />
 
         </Drawer.Navigator>

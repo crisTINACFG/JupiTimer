@@ -1,21 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { supabase } from '../api/supabaseClient';
 
-const Timers = ({ 
+const Timers = ({ //receives all the props passed from HomeScreen.js
     session,
     selectedLabel, 
     labelsLength, 
     distractionCount, 
-    setDistractionCount, 
     isRunning, 
     setIsRunning, 
     actualProductivity, 
     setActualProductivity,
     efficiency,
     setEfficiency,
-    showEndPromps, 
     setShowEndPromps,
     elapsedTime, 
     setElapsedTime
@@ -42,31 +40,30 @@ const Timers = ({
         const paddedSeconds = seconds.toString().padStart(2, '0');
     
         if (omitHours && hours === 0) {
-            // Format the time as "MM:SS"
+            //"MM:SS"
             return `${paddedMinutes}:${paddedSeconds}`;
         } else {
-            // Format the time as "HH:MM:SS"
+            //"HH:MM:SS"
             return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
         }
     };
 
     const calculateElapsedTime = () => {
         const stopTime = new Date();
-        // Check for startTime not being null
+        //check for startTime not being null
         if (startTime) {
             return Math.floor((stopTime - startTime) / 1000);
         }
         return 0;
     };
 
-    
     useEffect(() => {
         setLabel(selectedLabel);
     },[selectedLabel]);
 
     useEffect(() => { //controls behaviour of the timers based on the users actions or mode. When the isRunning state is true 
-        //(timer has been started), it sets up an interval that executes a function every 1000 milliseconds (1 second).
-        // This function updates the time state to either count up (stopwatch mode) or count down ( timer ).
+        // (timer has been started), it sets up an interval that executes a function every 1000 milliseconds (1 second)
+        // This function updates the time state to either count up (stopwatch mode) or count down (timer)
         
         let interval; //this interval ensures the UI is updated every sec to reflect the current time!!!
         if (isRunning) {
@@ -75,7 +72,7 @@ const Timers = ({
                     if (currentTime <= 1 && mode === 'timer') { //if time remaining is 1 or less then stop the timer
                         clearInterval(interval);
                         handleStartStop();
-                        return 0; // Stop the timer at zero
+                        return 0; //stop the timer at zero
                     }
                     if (mode === 'stopwatch') {
                         return currentTime + 1;
@@ -97,8 +94,7 @@ const Timers = ({
         return () => clearInterval(interval); //cleanup function react calls when component unmounts or before re-running due to changes
         //in its dependencies, this cleanup prevents the interval from continuing to run or update state in an unmounted component.
     },[isRunning, mode, timerDuration, startTime]); //these are dependencies, if these change then the
-    //effect re-runs to reflect the lastest state and props!!!
-    
+    //effect re-runs to reflect the lastest state and props!!! 
 
     const handleModeChange = newMode => {
         if (!isRunning) {
@@ -111,7 +107,7 @@ const Timers = ({
 
     const writeToDatabase = async (startTime, stopTime, elapsedTime, label, actualProductivity, distractionCount, efficiency) => {
         if (elapsedTime < 1) {
-            // show an alert and return to prevent the database operation if time elapsed is less than a second.
+            //show an alert and return to prevent the database operation if time elapsed is less than a second
             window.alert('Time elapsed too short.');
             return;
         }
@@ -130,7 +126,7 @@ const Timers = ({
                     stoptime: stopTime.toISOString(),   
                     elapsedtime: formattedElapsedTime,  
                     label_text: label,
-                    planet_type: 'Earth'  ,
+                    planet_type: 'Earth' , //this is temporary for future functions after nea that i will add!! just ignore
                     actualproductivity: actualProductivity,
                     totaldistractions: distractionCount,
                     efficiency:efficiency
@@ -153,11 +149,11 @@ const Timers = ({
                     Alert.alert('Time elapsed too short, session not saved')
                 }
             } else {
-                // Start the timer by setting the startTime to the current time
-                setStartTime(new Date()); // Reset the startTime when starting the timer
+                //start the timer by setting the startTime to the current time
+                setStartTime(new Date()); //reset the starttime when starting the timer
                 setIsRunning(true);
             }
-            // Toggle the running state
+            // toggle the running state
             setIsRunning(!isRunning); //changes the button to the opposite of what it is now 
         } else {
             Alert.alert("No labels", "Create a label before starting the timer.");
@@ -166,7 +162,8 @@ const Timers = ({
 
     const handleConfirmProductivity = () => {
 
-        efficiency = actualProductivity - (100 - 4*  distractionCount) //think about a non-linear model instead
+        efficiency = actualProductivity - (100 - 4*  distractionCount) //this is how the efficiency is calculated!!
+        //it does actualProductivity - predictedProductivity
         setEfficiency(efficiency)
         setShowEndPromps(true);
         writeToDatabase(startTime, new Date(), elapsedTime, label, actualProductivity, distractionCount, efficiency);
@@ -176,7 +173,7 @@ const Timers = ({
 
     const handleTimeSet = () => {
         const newDuration = parseInt(inputDuration) * 60;  //turns the input from minutes to seconds
-        if (!isNaN(newDuration) && newDuration > 0) {     
+        if (!isNaN(newDuration) && newDuration > 0) {  //if its a number and >0 then set timer duration and time
             setTimerDuration(newDuration);
             setTime(newDuration);
         }
@@ -204,16 +201,16 @@ const Timers = ({
     
                 {
                     mode === 'stopwatch' 
-                    ? ( 
+                    ? ( //normal view since stopwatch doesnt need a time change
                         <View style={styles.timerContainer}>
                             <Text style={styles.timer}>{formatTime(time)}</Text>
                         </View>
                     )
                     : mode === 'timer' 
                     ? ( 
-                        <TouchableOpacity 
+                        <TouchableOpacity //touchable opacity to allow for time change
                             style={styles.timerContainer} 
-                            onPress={() => !isRunning && setModalVisible(true)}
+                            onPress={() => !isRunning && setModalVisible(true)} //sets modalvisible true so that time change modal pops up
                         >
                             <Text style={styles.timer}>{formatTime(time, true)}</Text>
                         </TouchableOpacity>
@@ -226,7 +223,7 @@ const Timers = ({
                     <Text style={styles.startButtonText}>{isRunning ? 'Stop' : 'Start'}</Text>
                 </TouchableOpacity>
             
-            <Modal
+            <Modal //modal for changing the time
                 animationType="slide"
                 transparent={true}
                 visible={modalVisible}
@@ -257,16 +254,16 @@ const Timers = ({
             </Modal>
 
             <Modal
-            animationType="slide"
-            transparent={true}
-            visible={sessionEnd}
-            onRequestClose={() => setSessionEnd(false)}
-            >
+                animationType="slide"
+                transparent={true}
+                visible={sessionEnd}
+                onRequestClose={() => setSessionEnd(false)}
+                >
                 <View style={styles.centeredView}>
                     <View style={styles.productivityModal}>
                         <Text style={styles.percentageText}>What percentage of your planned task did you complete?</Text>
                         <Text style={styles.percentage}>{actualProductivity}%</Text>
-                        <Slider
+                        <Slider //the slider to pick the percentage of planned task completed
                             style={styles.slider}
                             minimumValue={0}
                             maximumValue={100}

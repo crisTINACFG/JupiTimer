@@ -1,50 +1,54 @@
 import React, { useState } from 'react'
 import { Alert, StyleSheet, View, AppState, TouchableOpacity, Text} from 'react-native'
 import { supabase } from './supabaseClient'
-import { Button, Input } from 'react-native-elements'
-import { TOUCHABLE_STATE } from 'react-native-gesture-handler/lib/typescript/components/touchables/GenericTouchable'
+import { Input } from 'react-native-elements'
 
-// Tells Supabase Auth to continuously refresh the session automatically if
-// the app is in the foreground. When this is added, you will continue to receive
-// `onAuthStateChange` events with the `TOKEN_REFRESHED` or `SIGNED_OUT` event
-// if the user's session is terminated. This should only be registered once.
 AppState.addEventListener('change', (state) => {
+  //if active start auto refreshing the auth session
   if (state === 'active') {
     supabase.auth.startAutoRefresh()
   } else {
+    //if app is not active stop auto refreshing auth session
     supabase.auth.stopAutoRefresh()
   }
 })
 
 export default function Auth() {
+  //state hooks 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function signInWithEmail() {
-    setLoading(true)
+    setLoading(true) // Start loading
+    //attempt to sign in using email and password
     const { error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
     })
 
+    //alert the user if error
     if (error) Alert.alert(error.message)
-    setLoading(false)
+    setLoading(false) //stop loading
   }
 
   async function signUpWithEmail() {
-    setLoading(true)
+    setLoading(true) //start loading
+    //attempt to sign up using emaik and password
     const { data: { session }, error, } = await supabase.auth.signUp({
       email: email,
       password: password,
     })
 
+    //if there is an error, alert the user
     if (error) Alert.alert(error.message)
-    setLoading(false)
+    setLoading(false) // stop loading
   }
 
+  //render the ui components
   return (
     <View style={styles.container}>
+      {/* input field for the email address */}
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Input
           label="Email"
@@ -56,6 +60,7 @@ export default function Auth() {
           autoCapitalize={'none'}
         />
       </View>
+      {/* input field for the password */}
       <View style={styles.verticallySpaced}>
         <Input
           label="Password"
@@ -68,24 +73,23 @@ export default function Auth() {
           autoCapitalize={'none'}
         />
       </View>
+      {/* Login button */}
       <View style={[styles.verticallySpaced, styles.button, styles.login]}>
-
         <TouchableOpacity onPress={() => signInWithEmail()}>
           <Text style={[styles.whiteText, styles.centerText]}>Log in</Text>
         </TouchableOpacity>
-
       </View>
-
+      {/* Register button */}
       <View style={[styles.verticallySpaced, styles.button, styles.register]}>
         <TouchableOpacity onPress={() => signUpWithEmail()}>
           <Text style={[styles.whiteText, styles.centerText]}>Register</Text>
         </TouchableOpacity>
       </View>
-
     </View>
   )
 }
 
+//styleSheet for styling the components
 const styles = StyleSheet.create({
   container: {
     padding: 12,
@@ -105,17 +109,16 @@ const styles = StyleSheet.create({
   button:{
     borderRadius:10,
     paddingTop: 15,
-
     borderWidth: 1,
-        borderColor: 'white',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 1,
-            height: 2,
-        },
-        shadowOpacity: 1,
-        shadowRadius: 4,
-        elevation: 2,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: {
+        width: 1,
+        height: 2,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   whiteText: {
     color:'#eeeafa',
