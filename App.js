@@ -22,17 +22,17 @@ export default function App() {
   
   useEffect(() => {
     //when the component mounts, this fetches the current session,
-    //if theres a session available, it updates the 'session' with the fetched data
+    //if theres a session available, it updates it with the fetched data
     supabase.auth.getSession().then(({ data: { session } }) => {
 
       setSession(session);
     });
-    //sets up real-time listener for auth state changes (login/out, session refresh)
+    //sets up real time listener for changes (login/out, session refresh)
     supabase.auth.onAuthStateChange((_event, session) => {
 
       setSession(session);
     });
-    //useEffect(() => { ... }, []); the empty [] ensures effect runs onlu after initial render
+    //the empty [] ensures effect runs onlu after first render
   }, []);
 
   function AuthenticatedApp() {
@@ -50,7 +50,7 @@ export default function App() {
           >
           <Drawer.Screen name="Home" component={HomeScreen} initialParams={{ session: session }} />
           <Drawer.Screen name="Statistics" component={StatisticsScreen} initialParams={{ session: session }} />
-          <Drawer.Screen name="Leaderboard" component={Leaderboard} initialParams={{ session: session }} />
+          <Drawer.Screen name="Leaderboard" component={Leaderboard}/>
           <Drawer.Screen name="Settings" component={SettingsScreen} initialParams={{ session: session }} />
 
         </Drawer.Navigator>

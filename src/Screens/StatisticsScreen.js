@@ -25,7 +25,8 @@ export default function StatisticsScreen ({ route }) {
   const [notProductiveTime, setNotProductiveTime] = useState('0sec');
 
 
-  const updateControlDate = (action) => {
+  const updateControlDate = (action) => { //depending on which segemented control button is 
+    //picked, the swich case function adjusts the controldate
     switch (selectedSegment) {
       case 'day':
         setControlDate(current => action(current, 1));
@@ -44,7 +45,7 @@ export default function StatisticsScreen ({ route }) {
     }
   };
 
-  const goToPreviousControlDate = () => {
+  const goToPreviousControlDate = () => { //manages the timeline control for selecting a older date
     updateControlDate((current, amount, unit) => {
       if (unit === 'month') {
         return addMonths(current, -amount);
@@ -55,7 +56,7 @@ export default function StatisticsScreen ({ route }) {
     });
   };
 
-  const goToNextControlDate = () => {
+  const goToNextControlDate = () => {//manages the timeline control for selecting a future date
     updateControlDate((current, amount, unit) => {
       if (unit === 'month') {
         return addMonths(current, amount);
@@ -66,7 +67,7 @@ export default function StatisticsScreen ({ route }) {
     });
   };
 
-  const formatControlDate = () => {
+  const formatControlDate = () => {//this formats the date depending on what segment control is chosen
     switch (selectedSegment) {
       case 'day':
         return format(controlDate, 'PPP');
@@ -74,13 +75,13 @@ export default function StatisticsScreen ({ route }) {
           const start = startOfWeek(controlDate, { weekStartsOn: 1 });
           const end = endOfWeek(controlDate, { weekStartsOn: 1 });
           
-          // Check if start and end are in the same month
+          //check if start and end are in the same month
           if (format(start, 'MMMM') === format(end, 'MMMM')) {
             const startDay = format(start, 'd');
             const endDay = format(end, 'd');
             return `${format(start, 'MMMM')} ${startDay}${getOrdinalSuffix(parseInt(startDay))} - ${endDay}${getOrdinalSuffix(parseInt(endDay))}`;
           } else {
-            // Different month, use full format for both dates
+            //different month, use full format for both dates
             return `${format(start, `MMMM d'${getOrdinalSuffix(new Date(start).getDate())}'`)} - ${format(end, `MMMM d'${getOrdinalSuffix(new Date(end).getDate())}'`)}`;
           }
       case 'month':
@@ -92,7 +93,7 @@ export default function StatisticsScreen ({ route }) {
     }
   };
 
-  const renderNewTimeControl = () => (
+  const renderTimeLineControl = () => (//this is the visuals for the timeline time selector
     <View style={styles.secondDateSelector}>
       <TouchableOpacity onPress={goToPreviousControlDate}>
         <Text style={styles.arrow}>{"<"}</Text>
@@ -109,14 +110,14 @@ export default function StatisticsScreen ({ route }) {
     result.setDate(result.getDate() + days);
     return result;
   };
-  const goToNextDay = () => {
+  const goToNextDay = () => {//for the timeline
     setCurrentDay(addDays(currentDay, 1));
   };
-  const goToPreviousDay = () => {
+  const goToPreviousDay = () => {//for the timeline
     setCurrentDay(addDays(currentDay, -1));
   };
 
-  const getOrdinalSuffix = (day) => {
+  const getOrdinalSuffix = (day) => {//just date formatting
     const j = day % 10,
           k = day % 100;
     if (j === 1 && k !== 11) {
@@ -131,7 +132,7 @@ export default function StatisticsScreen ({ route }) {
     return "th";
   };
 
-  const formatDate = (date) => {
+  const formatDate = (date) => {//just date formatting
   const dayOfMonth = format(date, 'd');
   const ordinalSuffix = getOrdinalSuffix(dayOfMonth);
   return format(date, `MMMM d'${ordinalSuffix}', yyyy`);
@@ -198,15 +199,14 @@ export default function StatisticsScreen ({ route }) {
     }
   };
 
-  const isToday = (date) => { //checking if the day selected is today
+  const isToday = (date) => { //checking if the day selected is today and returns a true or false
     const today = new Date();
     return date.getDate() === today.getDate() &&
       date.getMonth() === today.getMonth() &&
       date.getFullYear() === today.getFullYear();
   };
 
-  // fetch data and set timeline state
-  const fetchData = async () => {
+  const fetchData = async () => {// fetch data and set timeline state
     const data = await fetchTimelineData();
     if (data) {
       setTimelineData(data);
@@ -228,7 +228,7 @@ export default function StatisticsScreen ({ route }) {
     };
   }, [session.user.id]); 
 
-  const deleteSession = async (sessionid) => {
+  const deleteSession = async (sessionid) => {//this gets called when user confirms delete event
     const { data, error } = await supabase
       .from('studysession')
       .delete()
@@ -265,7 +265,7 @@ export default function StatisticsScreen ({ route }) {
     </View>
   );
 
-  const renderDetail = (rowData) => {
+  const renderDetail = (rowData) => {//this is the rendering for events in the timeline
     return (
       <TouchableOpacity
         style={styles.detailContainer}
@@ -290,12 +290,12 @@ export default function StatisticsScreen ({ route }) {
     );
   };
   
-  const renderTime = (rowData) => {
+  const renderTime = (rowData) => {//this is the timeline left hand side time display
     return (
       <Text style={styles.time}>{rowData.time}</Text>
     );};
 
-  const fetchAndAggregateLabelData = async () => { //this is for my second widget
+  const fetchAndAggregateLabelData = async () => { //this is for my second widget (statistics)
     const { start, end } = getStatsTimeframe();
 
     const { data, error } = await supabase
@@ -347,7 +347,7 @@ export default function StatisticsScreen ({ route }) {
     let productiveTimeInSeconds = 0;
     let notProductiveTimeInSeconds = 0;
   
-    data.forEach(session => {
+    data.forEach(session => {// for each session it converts elapsed time to seconds and categorizes as productive or not
       const elapsedTimeInSeconds = getSecondsFromElapsedTime(session.elapsedtime);
       if (labelProductivityStatus[session.label_text]) {
         productiveTimeInSeconds += elapsedTimeInSeconds;
@@ -360,12 +360,12 @@ export default function StatisticsScreen ({ route }) {
     setNotProductiveTime(formatTotalElapsedTime(notProductiveTimeInSeconds));
   };
  
-  const getSecondsFromElapsedTime = (elapsedtime) => {
+  const getSecondsFromElapsedTime = (elapsedtime) => {// using it for aggregateTimeByProductivity
     const parts = elapsedtime.split(':').map(part => parseInt(part, 10));
     return parts[0] * 3600 + parts[1] * 60 + parts[2];
   };
 
-  const renderLabelTimeData = () => {
+  const renderLabelTimeData = () => {//displays the total time per each label for the selected timeframe
     return Object.entries(labelTimeData).map(([label, time]) => (
       <View key={label} style={{ marginVertical: 4, marginLeft:10, }}>
         <Text>{label}: {time}</Text>
@@ -479,7 +479,7 @@ export default function StatisticsScreen ({ route }) {
           )}
         </View>
 
-        {renderNewTimeControl()}
+        {renderTimeLineControl()}
 
         <View style={styles.timePerLabelWidget}>
           {renderProductiveTimeData()}
