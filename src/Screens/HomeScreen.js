@@ -156,7 +156,7 @@ export default function HomeScreen({ route }) {
                 <View style = {styles.picker}>
                     <Picker
                         selectedValue={selectedLabel}
-                        onValueChange={(itemValue, itemIndex) => {
+                        onValueChange={(itemValue) => {
                             if (itemValue === 'new') {
                                 setShowModal(true);
                             } else {
